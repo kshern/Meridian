@@ -1,38 +1,37 @@
+# fileReader
+
+A media file browser application built with Nextron (Next.js + Electron).
+
 <p align="center"><img src="https://i.imgur.com/a9QWW0v.png"></p>
 
-## Usage
-
-### Create an App
-
-```
-# with npx
-$ npx create-nextron-app my-app --example with-tailwindcss
-
-# with yarn
-$ yarn create nextron-app my-app --example with-tailwindcss
-
-# with pnpm
-$ pnpm dlx create-nextron-app my-app --example with-tailwindcss
-```
+## Development
 
 ### Install Dependencies
 
-```
-$ cd my-app
+```bash
+# using yarn
+$ yarn
 
-# using yarn or npm
-$ yarn (or `npm install`)
-
-# using pnpm
-$ pnpm install --shamefully-hoist
+# or using npm
+$ npm install
 ```
 
-### Use it
+### Development Mode
 
+```bash
+# using yarn
+$ yarn dev
+
+# or using npm
+$ npm run dev
 ```
-# development mode
-$ yarn dev (or `npm run dev` or `pnpm run dev`)
 
-# production build
-$ yarn build (or `npm run build` or `pnpm run build`)
+### Production Build
+
+```bash
+# using yarn
+$ yarn build
+
+# or using npm
+$ npm run build
 ```
