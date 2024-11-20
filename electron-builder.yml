@@ -6,7 +6,8 @@ directories:
   output: dist
   buildResources: resources
 files:
-  - "**/*"
+  - "app/**/*"
+  - "package.json"
   - "!**/node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}"
   - "!**/node_modules/*/{test,__tests__,tests,powered-test,example,examples}"
   - "!**/node_modules/*.d.ts"
@@ -18,15 +19,3 @@ files:
   - "!**/{__pycache__,thumbs.db,.flowconfig,.idea,.vs,.nyc_output}"
   - "!**/{appveyor.yml,.travis.yml,circle.yml}"
   - "!**/{npm-debug.log,yarn.lock,.yarn-integrity,.yarn-metadata.json}"
-extraMetadata:
-  name: "freader"
-  version: "1.0.0"
-  description: "Media file browser application"
-  author: "Shern"
-  main: "./background.js"
-nsis:
-  oneClick: false
-  allowToChangeInstallationDirectory: true
-win:
-  target: nsis
-  icon: resources/icon.ico

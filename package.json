@@ -4,10 +4,10 @@
   "description": "Media file browser application",
   "version": "1.0.0",
   "author": "Shern",
-  "main": "app/background.js",
+  "main": "./app/background.js",
   "scripts": {
     "dev": "nextron",
-    "build": "nextron build",
+    "build": "tsc -p main/tsconfig.json && nextron build",
     "postinstall": "electron-builder install-app-deps"
   },
   "dependencies": {
