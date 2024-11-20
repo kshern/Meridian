@@ -133,12 +133,12 @@ function Home() {
   return (
     <React.Fragment>
       <Head>
-        <title>FReader</title>
+        <title>Meridian</title>
       </Head>
       <div className="h-screen flex flex-col bg-background text-text">
         {!currentPath ? (
           <div className="flex-1 flex justify-center items-center flex-col gap-4 fade-in">
-            <h1 className="text-4xl font-bold mb-4">FReader</h1>
+            <h1 className="text-4xl font-bold mb-4">Meridian</h1>
             <button
               onClick={handleOpenDirectory}
               className="btn btn-primary"

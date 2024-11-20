@@ -101,11 +101,12 @@ const ThumbnailViewer: React.FC<ThumbnailViewerProps> = ({
     const columnsCount = getColumnsCount(width);
     const startIdx = index * columnsCount;
     const rowFiles = files.slice(startIdx, startIdx + columnsCount);
+    const columnWidth = (width - 40 - (columnsCount - 1) * 10) / columnsCount; // 减去总padding和间隔的宽度
 
     return (
       <div key={key} style={{ ...style, display: 'flex', gap: '10px', padding: '20px' }}>
         {rowFiles.map((file) => (
-          <div key={file.path} style={{ flex: 1 }}>
+          <div key={file.path} style={{ width: columnWidth, minWidth: columnWidth, maxWidth: columnWidth }}>
             {renderGridItem(file)}
           </div>
         ))}
