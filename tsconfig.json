@@ -1,0 +1,28 @@
+{
+	"compilerOptions": {
+		"target": "es5",
+		"lib": ["dom", "dom.iterable", "esnext"],
+		"allowJs": true,
+		"skipLibCheck": true,
+		"strict": false,
+		"forceConsistentCasingInFileNames": true,
+		"noEmit": true,
+		"incremental": true,
+		"esModuleInterop": true,
+		"module": "esnext",
+		"moduleResolution": "node",
+		"resolveJsonModule": true,
+		"isolatedModules": true,
+		"jsx": "preserve",
+		"paths": {
+			"@/*": ["./*"],
+			"@styles/*": ["./renderer/styles/*"],
+			"@csv/*": ["./renderer/csv/*"],
+			"@components/*": ["./renderer/components/*"],
+			"@hooks/*": ["./renderer/hooks/*"],
+			"@utils/*": ["./renderer/utils/*"],
+			"@data/*": ["./renderer/data/*"]
+		}
+	},
+	"exclude": ["node_modules", "renderer/next.config.js", "app", "dist"]
+}

@@ -1,0 +1,21 @@
+{
+	"extends": "../tsconfig.json",
+	"compilerOptions": {
+		"paths": {
+			"@/*": ["../*"],
+			"@styles/*": ["../renderer/styles/*"],
+			"@components/*": ["../renderer/components/*"],
+			"@hooks/*": ["../renderer/hooks/*"],
+			"@utils/*": ["../renderer/utils/*"],
+			"@data/*": ["../renderer/data/*"]
+		}
+	},
+	"include": [
+		"next-env.d.ts",
+		"**/*.ts",
+		"**/*.tsx",
+		"utils/era-electron.js",
+		"utils/csv-util.js"
+	],
+	"exclude": ["node_modules"]
+}

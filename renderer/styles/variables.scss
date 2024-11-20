@@ -1,0 +1,36 @@
+$theme-background: #f7f7f9;
+$theme-title-color: #111c2e;
+$theme-text: #5f6b77;
+$theme-grey: #f5f5f5;
+$theme-high-light: #ff4f44;
+$theme-active: #0d6eed;
+$theme-primary: #0d6eed;
+$theme-btn: #0d6eed;
+$theme-link: #0d6eed;
+
+$media-sm: 750px;
+$media-md: 800px;
+$media-lg: 1080px;
+$media-xxl: 1900px;
+
+// 导出给js使用的
+:export {
+	primary-theme-bg: $theme-background;
+	primary-theme-title-color: $theme-title-color;
+	primary-theme-text: $theme-text;
+	primary-theme-grey: $theme-grey;
+	primary-theme-high-light: $theme-high-light;
+	primary-theme-active: $theme-active;
+	primary-theme-btn: $theme-btn;
+	primary-theme-link: $theme-link;
+}
+
+@function p2m($px, $base-width: 1080px) {
+	@if $px <=0 {
+		@return #{max(calc($px / $base-width) * 100vw, $px)};
+	}
+
+	@return #{min(calc($px / $base-width) * 100vw, $px)};
+}
+
+$content-padding: p2m(24px);
