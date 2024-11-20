@@ -1,9 +1,10 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
+import { MediaFile } from './fileUtils';
 
 interface FileAPI {
   send(channel: string, value: unknown): void;
   on(channel: string, callback: (...args: unknown[]) => void): () => void;
-  scanDirectory(path: string): Promise<any[]>;
+  scanDirectory(path: string): Promise<MediaFile[]>;
   openDirectory(): Promise<string>;
   readTextFile(path: string): Promise<string>;
   openInExplorer(path: string): Promise<void>;

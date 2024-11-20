@@ -1,21 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import Head from 'next/head';
-import MediaViewer from '../components/MediaViewer';
 import ThumbnailViewer from '../components/ThumbnailViewer';
 import { MediaFile } from '../../main/fileUtils';
-
-declare global {
-  interface Window {
-    ipc: {
-      send: (channel: string, data: any) => void;
-      on: (channel: string, func: (...args: any[]) => void) => () => void;
-      scanDirectory: (path: string) => Promise<MediaFile[]>;
-      openDirectory: () => Promise<string>;
-      readTextFile: (path: string) => Promise<string>;
-      openInExplorer: (path: string) => Promise<void>;
-    };
-  }
-}
+import MediaViewer from '../components/MediaViewer';
 
 function Home() {
   const [files, setFiles] = useState<MediaFile[]>([]);
@@ -60,6 +47,7 @@ function Home() {
       setCurrentPath(path);
       setPathHistory(prev => [...prev, path]);
       setSelectedFileIndex(0);
+      setViewMode('thumbnail'); // 进入新目录时切换回缩略图模式
     } catch (error) {
       console.error('Error opening directory:', error);
     }
@@ -97,14 +85,18 @@ function Home() {
     return files.filter(f => f.type === 'image' || f.type === 'video');
   };
 
-  const handlePathPartClick = async (index: number) => {
-    const pathParts = currentPath.split('\\');
-    const targetPath = pathParts.slice(0, index + 1).join('\\');
+  const handlePathSegmentClick = async (index: number) => {
     try {
-      const mediaFiles = await window.ipc.scanDirectory(targetPath);
-      setFiles(mediaFiles);
-      setCurrentPath(targetPath);
-      setPathHistory(prev => [...prev, targetPath]);
+      const pathParts = currentPath.split('\\');
+      const targetPath = pathParts.slice(0, index + 1).join('\\');
+      if (targetPath) {
+        const mediaFiles = await window.ipc.scanDirectory(targetPath);
+        setFiles(mediaFiles);
+        setCurrentPath(targetPath);
+        setPathHistory(prev => prev.slice(0, index + 1));
+        setSelectedFileIndex(0);
+        setViewMode('thumbnail'); // 点击路径时切换回缩略图模式
+      }
     } catch (error) {
       console.error('Error navigating to path:', error);
     }
@@ -126,10 +118,10 @@ function Home() {
           <React.Fragment key={index}>
             {index > 0 && <span className="text-text-secondary">\</span>}
             <span
-              className="path-part"
-              onClick={() => handlePathPartClick(index)}
+              className="path-part cursor-pointer hover:text-primary"
+              onClick={() => handlePathSegmentClick(index)}
             >
-              {part}
+              {part || 'Computer'}
             </span>
           </React.Fragment>
         ))}

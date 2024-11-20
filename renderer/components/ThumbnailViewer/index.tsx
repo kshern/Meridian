@@ -1,6 +1,6 @@
 import React from 'react';
 import { List, AutoSizer } from 'react-virtualized';
-import { MediaFile } from '../../main/fileUtils';
+import { MediaFile } from '../../../main/fileUtils';
 
 interface ThumbnailViewerProps {
   files: MediaFile[];
@@ -47,11 +47,16 @@ const ThumbnailViewer: React.FC<ThumbnailViewerProps> = ({
       <div key={key} style={{ ...style, display: 'flex', gap: '10px' }}>
         {rowFiles.map((file, idx) => (
           <div
-            key={`${key}-${idx}`}
-            className="media-item"
-            onClick={() =>
-              file.type === 'directory' ? onDirectoryClick(file.path) : onFileClick(file)
-            }
+            key={file.path}
+            className="media-item group"
+            onClick={() => {
+              if (file.type === 'directory') {
+                onDirectoryClick?.(file.path);
+              } else {
+                onFileClick?.(file);
+              }
+            }}
+            title={file.name}
           >
             {file.type === 'image' ? (
               <img

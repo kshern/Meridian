@@ -1,8 +1,8 @@
-import { IpcHandler } from "../main/preload";
+import { FileAPI } from "../main/preload";
 
 declare global {
 	interface Window {
-		ipc: IpcHandler;
+		ipc: FileAPI;
 		era: Era;
 		data: Era.data;
 	}

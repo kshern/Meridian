@@ -1,15 +1,9 @@
 appId: com.freader.app
 productName: FReader
-copyright: Copyright 2024
-asar: true
 directories:
   output: dist
   buildResources: resources
 files:
   - "**/*"
-nsis:
-  oneClick: false
-  allowToChangeInstallationDirectory: true
 win:
   target: nsis
-  icon: resources/icon.ico

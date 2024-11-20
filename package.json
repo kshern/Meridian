@@ -1,7 +1,7 @@
 {
   "private": true,
-  "name": "my-nextron-app",
-  "description": "My application description",
+  "name": "freader",
+  "description": "Media file browser application",
   "version": "1.0.0",
   "author": "Shern",
   "main": "app/background.js",

@@ -115,6 +115,7 @@ body {
   border-radius: 0.5rem;
   background-color: var(--surface-color);
   transition: all 0.2s ease;
+  cursor: pointer;
 }
 
 .media-item:hover {
@@ -140,6 +141,66 @@ body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* 媒体容器 */
+.media-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.media-container.active {
+  ring: 2px solid var(--primary-color);
+  ring-opacity: 0.5;
+}
+
+/* 垂直布局中的媒体项目 */
+.vertical .media-container {
+  width: 100%;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: auto;
+}
+
+.vertical .media-container:last-child {
+  border-bottom: none;
+}
+
+.vertical .media-container img {
+  width: 100% !important;
+  height: auto !important;
+  object-fit: contain;
+}
+
+.vertical .media-container .react-player {
+  width: 100% !important;
+}
+
+.vertical .media-container .react-player > div {
+  width: 100% !important;
+}
+
+/* 水平布局中的媒体项目 */
+.horizontal .media-container {
+  height: 100%;
+  min-height: 200px;
+}
+
+.horizontal .media-container img {
+  max-width: 1680px;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
 }
 
 /* 动画效果 */
