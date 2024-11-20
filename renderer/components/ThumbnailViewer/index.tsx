@@ -1,6 +1,7 @@
 import React from 'react';
 import { List, AutoSizer } from 'react-virtualized';
 import { MediaFile } from '../../../main/fileUtils';
+import LazyImage from './LazyImage';
 
 interface ThumbnailViewerProps {
   files: MediaFile[];
@@ -26,18 +27,18 @@ const ThumbnailViewer: React.FC<ThumbnailViewerProps> = ({
     }
   };
 
-  // 计算每行显示的缩略图数量
+  // 
   const getColumnsCount = (width: number) => {
-    return Math.max(Math.floor(width / 200), 2); // 每个缩略图最小宽度200px
+    return Math.max(Math.floor(width / 200), 2); // 
   };
 
-  // 计算行高
+  // 
   const getRowHeight = (width: number) => {
     const columnWidth = width / getColumnsCount(width);
-    return columnWidth + 40; // 额外空间用于显示文件名
+    return columnWidth + 40; // 
   };
 
-  // 获取指定索引的行内容
+  // 
   const rowRenderer = ({ index, key, style, width }: any) => {
     const columnsCount = getColumnsCount(width);
     const startIdx = index * columnsCount;
@@ -59,10 +60,10 @@ const ThumbnailViewer: React.FC<ThumbnailViewerProps> = ({
             title={file.name}
           >
             {file.type === 'image' ? (
-              <img
+              <LazyImage
                 src={`file://${file.path}`}
                 alt={file.name}
-                loading="lazy"
+                className="w-full h-full object-cover"
               />
             ) : (
               <div className="flex items-center justify-center h-full bg-surface">
