@@ -11,6 +11,12 @@ function Home() {
   const [viewMode, setViewMode] = useState<'thumbnail' | 'detail'>('thumbnail');
   const [selectedFileIndex, setSelectedFileIndex] = useState<number>(0);
   const [viewType, setViewType] = useState<'grid' | 'list'>('grid');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+
+  // 过滤文件列表
+  const filteredFiles = files.filter(file => 
+    file.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   useEffect(() => {
     const cleanup = window.ipc.on('open-path', async (path: string) => {
@@ -87,20 +93,43 @@ function Home() {
   };
 
   const handlePathSegmentClick = async (index: number) => {
+    const pathParts = pathHistory[0].split('\\');
+    // 处理根目录的特殊情况
+    let targetPath = index === 0 
+      ? pathParts[0] + '\\'  // 如果是根目录，确保添加反斜杠
+      : pathParts.slice(0, index + 1).join('\\');
+
     try {
-      const pathParts = currentPath.split('\\');
-      const targetPath = pathParts.slice(0, index + 1).join('\\');
-      if (targetPath) {
-        const mediaFiles = await window.ipc.scanDirectory(targetPath);
-        setFiles(mediaFiles);
-        setCurrentPath(targetPath);
-        setPathHistory(prev => prev.slice(0, index + 1));
-        setSelectedFileIndex(0);
-        setViewMode('thumbnail'); // 点击路径时切换回缩略图模式
-      }
+      const mediaFiles = await window.ipc.scanDirectory(targetPath);
+      setFiles(mediaFiles);
+      setCurrentPath(targetPath);
+      setPathHistory(prev => prev.slice(0, pathHistory.findIndex(p => p === targetPath) + 1));
+      setSelectedFileIndex(0);
+      setViewMode('thumbnail');
+      setSearchQuery(''); // 清除搜索内容
     } catch (error) {
       console.error('Error navigating to path:', error);
     }
+  };
+
+  const renderPathNavigation = () => {
+    const pathParts = currentPath.split('\\');
+    return (
+      <div className="flex items-center gap-1 text-sm">
+        {pathParts.map((part, index) => (
+          <React.Fragment key={index}>
+            {index > 0 && <span className="text-gray-400">\</span>}
+            <button
+              className="hover:text-blue-500 text-gray-600"
+              onClick={() => handlePathSegmentClick(index)}
+            >
+              {part || 'Computer'}
+              {index === 0 && '\\'} {/* 为根目录显示反斜杠 */}
+            </button>
+          </React.Fragment>
+        ))}
+      </div>
+    );
   };
 
   const handleOpenInExplorer = async () => {
@@ -138,7 +167,24 @@ function Home() {
                 >
                   返回上级
                 </button>
-                <span className="text-gray-600 text-sm truncate max-w-lg">{currentPath}</span>
+                {renderPathNavigation()}
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="搜索文件..."
+                    className="px-3 py-2 text-sm text-gray-600 placeholder-gray-400 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-48"
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
               </>
             )}
           </div>
@@ -181,7 +227,7 @@ function Home() {
           {viewMode === 'thumbnail' ? (
             <div className="h-full overflow-auto">
               <ThumbnailViewer
-                files={files}
+                files={filteredFiles}
                 onDirectoryClick={handleDirectoryClick}
                 onFileClick={handleFileClick}
                 viewType={viewType}
