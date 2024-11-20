@@ -1,4 +1,4 @@
-# File Reader 文件浏览器
+# Meridian 文件浏览器
 
 一个基于 Electron 和 Next.js 的现代文件浏览器应用，专为图片和视频浏览设计。
 

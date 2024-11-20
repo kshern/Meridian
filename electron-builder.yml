@@ -1,5 +1,5 @@
-appId: com.freader.app
-productName: FReader
+appId: com.meridian.app
+productName: Meridian
 copyright: Copyright 2024
 asar: true
 directories:
@@ -19,3 +19,19 @@ files:
   - "!**/{__pycache__,thumbs.db,.flowconfig,.idea,.vs,.nyc_output}"
   - "!**/{appveyor.yml,.travis.yml,circle.yml}"
   - "!**/{npm-debug.log,yarn.lock,.yarn-integrity,.yarn-metadata.json}"
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: "Meridian"
+  uninstallDisplayName: "Meridian"
+  include: build/installer.nsh
+
+win:
+  target: 
+    - target: nsis
+      arch: 
+        - x64
+  icon: resources/icon.svg
