@@ -26,32 +26,43 @@ export function getFileType(filePath: string): 'image' | 'video' | 'text' | null
 export async function scanDirectory(dirPath: string): Promise<MediaFile[]> {
   const mediaFiles: MediaFile[] = [];
 
-  const entries = await fs.promises.readdir(dirPath, { withFileTypes: true });
+  try {
+    const entries = await fs.promises.readdir(dirPath, { withFileTypes: true });
 
-  for (const entry of entries) {
-    const fullPath = path.join(dirPath, entry.name);
-    const stats = await fs.promises.stat(fullPath);
+    for (const entry of entries) {
+      try {
+        const fullPath = path.join(dirPath, entry.name);
+        const stats = await fs.promises.stat(fullPath);
 
-    if (entry.isDirectory()) {
-      mediaFiles.push({
-        path: fullPath,
-        type: 'directory',
-        name: entry.name,
-        size: 0,
-        modifiedTime: stats.mtime
-      });
-    } else {
-      const type = getFileType(fullPath);
-      if (type) {
-        mediaFiles.push({
-          path: fullPath,
-          type,
-          name: entry.name,
-          size: stats.size,
-          modifiedTime: stats.mtime
-        });
+        if (entry.isDirectory()) {
+          mediaFiles.push({
+            path: fullPath,
+            type: 'directory',
+            name: entry.name,
+            size: 0,
+            modifiedTime: stats.mtime
+          });
+        } else {
+          const type = getFileType(fullPath);
+          if (type) {
+            mediaFiles.push({
+              path: fullPath,
+              type,
+              name: entry.name,
+              size: stats.size,
+              modifiedTime: stats.mtime
+            });
+          }
+        }
+      } catch (error) {
+        // 跳过无法访问的文件或目录
+        console.warn(`无法访问文件或目录: ${entry.name}`, error);
+        continue;
       }
     }
+  } catch (error) {
+    console.error(`无法读取目录: ${dirPath}`, error);
+    throw error; // 如果整个目录都无法读取，则抛出错误
   }
 
   return mediaFiles.sort((a, b) => {

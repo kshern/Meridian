@@ -111,88 +111,91 @@ function Home() {
     }
   };
 
-  const renderPathNavigation = () => {
-    const pathParts = currentPath.split('\\');
-    return (
-      <div className="flex items-center gap-1 flex-1 overflow-hidden">
-        {pathParts.map((part, index) => (
-          <React.Fragment key={index}>
-            {index > 0 && <span className="text-text-secondary">\</span>}
-            <span
-              className="path-part cursor-pointer hover:text-primary"
-              onClick={() => handlePathSegmentClick(index)}
-            >
-              {part || 'Computer'}
-            </span>
-          </React.Fragment>
-        ))}
-      </div>
-    );
-  };
+  const handleGoBack = handleBack;
 
   return (
     <React.Fragment>
       <Head>
-        <title>Meridian</title>
+        <title>FReader</title>
       </Head>
-      <div className="h-screen flex flex-col bg-background text-text">
-        {!currentPath ? (
-          <div className="flex-1 flex justify-center items-center flex-col gap-4 fade-in">
-            <h1 className="text-4xl font-bold mb-4">Meridian</h1>
+      <div className="flex flex-col h-screen">
+        <div className="flex items-center justify-between p-2 bg-gray-100">
+          <div className="flex items-center space-x-2">
             <button
               onClick={handleOpenDirectory}
-              className="btn btn-primary"
+              className="px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             >
               选择文件夹
             </button>
+            {currentPath && (
+              <>
+                <button
+                  onClick={handleGoBack}
+                  disabled={pathHistory.length <= 1}
+                  className={`px-3 py-2 text-sm font-medium text-gray-700 bg-white rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                    pathHistory.length <= 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'
+                  }`}
+                >
+                  返回上级
+                </button>
+                <span className="text-gray-600 text-sm truncate max-w-lg">{currentPath}</span>
+              </>
+            )}
           </div>
-        ) : (
-          <>
-            <div className="navbar flex items-center gap-2">
-              <button
-                onClick={handleBack}
-                className="btn btn-icon"
-                disabled={pathHistory.length <= 1}
-              >
-                ←
-              </button>
-              {renderPathNavigation()}
-              <button
-                onClick={() => setViewType(prev => prev === 'grid' ? 'list' : 'grid')}
-                className="btn btn-icon"
-                title={viewType === 'grid' ? '切换到列表视图' : '切换到网格视图'}
-              >
-                {viewType === 'grid' ? '☰' : '▤'}
-              </button>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => {
+                if (viewMode === 'detail') {
+                  setViewMode('thumbnail');
+                } else {
+                  setViewType(viewType === 'grid' ? 'list' : 'grid');
+                }
+              }}
+              className="p-2 text-gray-600 hover:bg-gray-200 rounded"
+              title={
+                viewMode === 'detail'
+                  ? '返回缩略图'
+                  : viewType === 'grid'
+                  ? '切换到列表视图'
+                  : '切换到网格视图'
+              }
+            >
+              {viewMode === 'detail'
+                ? '返回缩略图'
+                : viewType === 'grid'
+                ? '列表视图'
+                : '网格视图'}
+            </button>
+            {currentPath && (
               <button
                 onClick={handleOpenInExplorer}
-                className="btn btn-icon"
+                className="p-2 text-gray-600 hover:bg-gray-200 rounded"
                 title="在资源管理器中打开"
               >
                 📂
               </button>
+            )}
+          </div>
+        </div>
+        <div className="flex-1 overflow-hidden">
+          {viewMode === 'thumbnail' ? (
+            <div className="h-full overflow-auto">
+              <ThumbnailViewer
+                files={files}
+                onDirectoryClick={handleDirectoryClick}
+                onFileClick={handleFileClick}
+                viewType={viewType}
+              />
             </div>
-            <div className="flex-1 overflow-hidden">
-              {viewMode === 'thumbnail' ? (
-                <div className="h-full overflow-auto">
-                  <ThumbnailViewer
-                    files={files}
-                    onDirectoryClick={handleDirectoryClick}
-                    onFileClick={handleFileClick}
-                    viewType={viewType}
-                  />
-                </div>
-              ) : (
-                <div className="h-full">
-                  <MediaViewer 
-                    files={getMediaFiles()} 
-                    initialIndex={selectedFileIndex}
-                  />
-                </div>
-              )}
+          ) : (
+            <div className="h-full">
+              <MediaViewer 
+                files={getMediaFiles()} 
+                initialIndex={selectedFileIndex}
+              />
             </div>
-          </>
-        )}
+          )}
+        </div>
       </div>
     </React.Fragment>
   );
