@@ -10,6 +10,7 @@ function Home() {
   const [pathHistory, setPathHistory] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<'thumbnail' | 'detail'>('thumbnail');
   const [selectedFileIndex, setSelectedFileIndex] = useState<number>(0);
+  const [viewType, setViewType] = useState<'grid' | 'list'>('grid');
 
   useEffect(() => {
     const cleanup = window.ipc.on('open-path', async (path: string) => {
@@ -150,28 +151,25 @@ function Home() {
             <div className="navbar flex items-center gap-2">
               <button
                 onClick={handleBack}
+                className="btn btn-icon"
                 disabled={pathHistory.length <= 1}
-                className="btn tooltip"
-                data-tooltip="返回上级目录"
               >
                 ←
               </button>
-              {viewMode === 'detail' && (
-                <button
-                  onClick={handleCloseDetail}
-                  className="btn tooltip"
-                  data-tooltip="返回缩略图视图"
-                >
-                  ⊟
-                </button>
-              )}
               {renderPathNavigation()}
               <button
-                onClick={handleOpenInExplorer}
-                className="btn tooltip"
-                data-tooltip="在资源管理器中打开"
+                onClick={() => setViewType(prev => prev === 'grid' ? 'list' : 'grid')}
+                className="btn btn-icon"
+                title={viewType === 'grid' ? '切换到列表视图' : '切换到网格视图'}
               >
-                <span className="text-lg">📂</span>
+                {viewType === 'grid' ? '☰' : '▤'}
+              </button>
+              <button
+                onClick={handleOpenInExplorer}
+                className="btn btn-icon"
+                title="在资源管理器中打开"
+              >
+                📂
               </button>
             </div>
             <div className="flex-1 overflow-hidden">
@@ -181,6 +179,7 @@ function Home() {
                     files={files}
                     onDirectoryClick={handleDirectoryClick}
                     onFileClick={handleFileClick}
+                    viewType={viewType}
                   />
                 </div>
               ) : (

@@ -161,6 +161,18 @@ body {
   ring-opacity: 0.5;
 }
 
+.media-container.list .list-item {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.media-container.list .list-item:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.media-container.grid .media-item {
+  height: 100%;
+}
+
 /* 垂直布局中的媒体项目 */
 .vertical .media-container {
   width: 100%;
@@ -225,7 +237,7 @@ body {
 .tooltip:hover::before {
   content: attr(data-tooltip);
   position: absolute;
-  bottom: 100%;
+  top: 100%;
   left: 50%;
   transform: translateX(-50%);
   padding: 0.25rem 0.5rem;
