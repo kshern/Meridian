@@ -28,6 +28,8 @@ nsis:
   shortcutName: "Meridian"
   uninstallDisplayName: "Meridian"
   include: build/installer.nsh
+  perMachine: true
+  allowElevation: true
 
 win:
   target: 
