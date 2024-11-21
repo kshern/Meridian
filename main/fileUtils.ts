@@ -85,3 +85,36 @@ export async function getFileContent(filePath: string): Promise<string | null> {
     return null;
   }
 }
+
+/**
+ * 将系统路径转换为应用内统一格式（使用>作为分隔符）
+ * 输入: "D:/folder1/folder2/file.txt" 或 "D:\folder1\folder2\file.txt"
+ * 输出: "D:>folder1>folder2>file.txt"
+ */
+export function convertToAppPath(systemPath: string): string {
+  if (!systemPath) return '';
+  
+  // 统一将反斜杠转换为正斜杠，然后替换为 ">"
+  return systemPath.replace(/[\\/]+/g, '>').replace(/^>+|>+$/g, '');
+}
+
+/**
+ * 将应用内路径格式转换回系统路径格式（用于文件操作）
+ * 输入: "D:>folder1>folder2>file.txt"
+ * 输出: "D:/folder1/folder2/file.txt"
+ */
+export function convertToSystemPath(appPath: string): string {
+  if (!appPath) return '';
+  
+  // 将 ">" 转换为系统路径分隔符
+  return appPath.replace(/>/g, path.sep);
+}
+
+/**
+ * 将路径格式化为Windows资源管理器样式
+ * 输入: "D:/folder1/folder2/file.txt" 或 "D:\folder1\folder2\file.txt"
+ * 输出: "D:>folder1>folder2>file.txt"
+ */
+export function formatPathToExplorerStyle(inputPath: string): string {
+  return convertToAppPath(inputPath);
+}

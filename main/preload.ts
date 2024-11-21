@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
 import { MediaFile } from './fileUtils';
+import * as path from 'path';
 
 interface FileAPI {
   send(channel: string, value: unknown): void;
@@ -8,6 +9,8 @@ interface FileAPI {
   openDirectory(): Promise<string>;
   readTextFile(path: string): Promise<string>;
   openInExplorer(path: string): Promise<void>;
+  convertToAppPath(path: string): string;
+  convertToSystemPath(path: string): string;
 }
 
 const handler: FileAPI = {
@@ -34,6 +37,14 @@ const handler: FileAPI = {
   },
   async openInExplorer(path: string) {
     return ipcRenderer.invoke('open-in-explorer', path);
+  },
+  convertToAppPath(appPath: string) {
+    // 统一将所有系统的路径分隔符转换为 >
+    return appPath.replace(/[\\/]+/g, '>').replace(/^>+|>+$/g, '');
+  },
+  convertToSystemPath(appPath: string) {
+    // 使用 path.sep 获取当前系统的路径分隔符
+    return appPath.replace(/>/g, path.sep);
   }
 };
 
