@@ -36,4 +36,4 @@ win:
     - target: nsis
       arch: 
         - x64
-  icon: resources/icon.svg
+  icon: resources/icon.png
