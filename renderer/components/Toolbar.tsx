@@ -1,14 +1,17 @@
 import React from 'react';
+import { Bars3Icon } from '@heroicons/react/24/outline';
 
 interface ToolbarProps {
   currentPath: string;
   searchQuery: string;
   viewMode: 'thumbnail' | 'detail';
   viewType: 'grid' | 'list';
+  showSidebar: boolean;
   onOpenDirectory: () => void;
   onGoBack: () => void;
   onSearchChange: (value: string) => void;
   onViewModeChange: () => void;
+  onToggleSidebar: () => void;
 }
 
 const Toolbar: React.FC<ToolbarProps> = ({
@@ -16,14 +19,23 @@ const Toolbar: React.FC<ToolbarProps> = ({
   searchQuery,
   viewMode,
   viewType,
+  showSidebar,
   onOpenDirectory,
   onGoBack,
   onSearchChange,
   onViewModeChange,
+  onToggleSidebar,
 }) => {
   return (
-    <div className="flex items-center justify-between p-2 bg-gray-100">
+    <div className="flex items-center justify-between p-2 bg-gray-100 dark:bg-gray-800">
       <div className="flex items-center space-x-2">
+        <button
+          onClick={onToggleSidebar}
+          className="p-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white focus:outline-none"
+          title={showSidebar ? "隐藏侧边栏" : "显示侧边栏"}
+        >
+          <Bars3Icon className="w-5 h-5" />
+        </button>
         <button
           onClick={onOpenDirectory}
           className="px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
