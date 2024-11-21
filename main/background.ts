@@ -2,7 +2,7 @@ import path from 'path'
 import { app, ipcMain, dialog, shell } from 'electron'
 import serve from 'electron-serve'
 import { createWindow } from './helpers'
-import { scanDirectory, getFileContent, registerFileAssociation } from './fileUtils'
+import { scanDirectory, getFileContent } from './fileUtils'
 
 // 设置日志输出
 const log = {
@@ -90,9 +90,6 @@ if (!gotTheLock) {
   ;(async () => {
     await app.whenReady()
     log.info('App is ready');
-
-    // 注册为系统默认打开方式
-    registerFileAssociation()
 
     mainWindow = createWindow('main', {
       width: 1000,

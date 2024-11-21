@@ -5,7 +5,7 @@ import path from 'path';
 // 支持的文件类型
 const SUPPORTED_IMAGE_TYPES = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
 const SUPPORTED_VIDEO_TYPES = ['.mp4', '.webm', '.mkv'];
-const SUPPORTED_TEXT_TYPES = ['.txt'];
+const SUPPORTED_TEXT_TYPES = ['.txt']
 
 export interface MediaFile {
   path: string;
@@ -71,13 +71,6 @@ export async function scanDirectory(dirPath: string): Promise<MediaFile[]> {
     if (a.type !== 'directory' && b.type === 'directory') return 1;
     return a.name.localeCompare(b.name);
   });
-}
-
-// 注册为系统默认打开方式
-export function registerFileAssociation() {
-  if (process.platform === 'win32') {
-    app.setAsDefaultProtocolClient('freader');
-  }
 }
 
 // 获取文件内容
