@@ -64,7 +64,7 @@ const ThumbnailViewer: React.FC<ThumbnailViewerProps> = ({
 
   const renderGridItem = (file: MediaFile) => (
     <div
-      className="media-item group relative rounded-lg overflow-hidden cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:shadow-lg"
+      className={`media-item group relative w-full h-full rounded-lg overflow-hidden cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:shadow-lg ${colors.backgroundSecondary}`}
       onClick={() => {
         if (file.type === 'directory') {
           onDirectoryClick?.(file.path);
@@ -81,7 +81,7 @@ const ThumbnailViewer: React.FC<ThumbnailViewerProps> = ({
           className="w-full h-full object-cover"
         />
       ) : (
-        <div className={`flex items-center justify-center h-full ${colors.backgroundSecondary} backdrop-blur-sm`}>
+        <div className="flex items-center justify-center h-full backdrop-blur-sm">
           <div className="transition-colors">
             {getFileIcon(file)}
           </div>

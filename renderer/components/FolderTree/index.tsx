@@ -18,32 +18,46 @@ interface TreeItem {
 }
 
 const FileIcon = ({ type }: { type: string }) => {
-  const { theme } = useTheme();
-  const isDark = theme === 'dark';
+  const { colors } = useTheme();
+  
+  const getIconColor = (type: string) => {
+    switch (type) {
+      case 'directory':
+        return colors.folderIcon;
+      case 'image':
+        return colors.imageIcon;
+      case 'video':
+        return colors.videoIcon;
+      case 'text':
+      default:
+        return colors.textIcon;
+    }
+  };
+
+  const iconClass = `w-5 h-5 flex-shrink-0 ${getIconColor(type)}`;
 
   switch (type) {
     case 'directory':
-      return <FolderIcon className={`w-5 h-5 ${isDark ? 'text-yellow-400' : 'text-yellow-500'} flex-shrink-0`} />;
+      return <FolderIcon className={iconClass} />;
     case 'image':
-      return <PhotoIcon className={`w-5 h-5 ${isDark ? 'text-blue-400' : 'text-blue-500'} flex-shrink-0`} />;
+      return <PhotoIcon className={iconClass} />;
     case 'video':
-      return <FilmIcon className={`w-5 h-5 ${isDark ? 'text-purple-400' : 'text-purple-500'} flex-shrink-0`} />;
+      return <FilmIcon className={iconClass} />;
     case 'text':
-      return <DocumentTextIcon className={`w-5 h-5 ${isDark ? 'text-gray-400' : 'text-gray-500'} flex-shrink-0`} />;
+      return <DocumentTextIcon className={iconClass} />;
     default:
-      return <DocumentIcon className={`w-5 h-5 ${isDark ? 'text-gray-500' : 'text-gray-400'} flex-shrink-0`} />;
+      return <DocumentIcon className={iconClass} />;
   }
 };
 
 const TreeNode = ({ item, level = 0, onSelect, onToggle }: { item: TreeItem; level?: number; onSelect: (path: string) => void; onToggle: (path: string) => void }) => {
-  const { theme } = useTheme();
-  const isDark = theme === 'dark';
+  const { colors } = useTheme();
   const indent = level * 20;
 
   const handleClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (item.type === 'directory') {
-      if (!item.isExpanded) {  
+      if (!item.isExpanded) {
         onToggle(item.path);
       }
       onSelect(window.ipc.convertToSystemPath(item.path));
@@ -73,11 +87,11 @@ const TreeNode = ({ item, level = 0, onSelect, onToggle }: { item: TreeItem; lev
       <div
         className={`
           flex items-center py-1.5 px-3 
-          ${isDark ? 'hover:bg-gray-700/50' : 'hover:bg-gray-50'}
+          ${colors.backgroundHover}
           cursor-pointer transition-colors duration-200
           rounded-lg mx-1 my-0.5
           ${item.type === 'directory' ? 'font-medium' : 'font-normal'}
-          ${isDark ? 'text-gray-200' : 'text-gray-700'}
+          ${colors.textSecondary}
         `}
         style={{ paddingLeft: `${indent + 12}px` }}
         onClick={handleClick}
@@ -85,20 +99,22 @@ const TreeNode = ({ item, level = 0, onSelect, onToggle }: { item: TreeItem; lev
         <div className="flex items-center flex-1 min-w-0 space-x-2">
           {item.type === 'directory' && (
             <div 
-              className={`p-0.5 -ml-1 ${isDark ? 'hover:bg-gray-600' : 'hover:bg-gray-200'} rounded-sm cursor-pointer`}
+              className={`p-0.5 -ml-1 ${colors.backgroundHover} rounded-sm cursor-pointer`}
               onClick={handleToggleClick}
             >
               {item.isExpanded ? (
-                <ChevronDownIcon className={`w-3.5 h-3.5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
+                <ChevronDownIcon className={`w-3.5 h-3.5 ${colors.icon}`} />
               ) : (
-                <ChevronRightIcon className={`w-3.5 h-3.5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
+                <ChevronRightIcon className={`w-3.5 h-3.5 ${colors.icon}`} />
               )}
             </div>
           )}
           <FileIcon type={item.type} />
-          <span className={`truncate text-sm ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>{item.name}</span>
+          <span className={`truncate text-sm ${colors.textSecondary} ${colors.textHover}`}>
+            {item.name}
+          </span>
           {item.size && item.type !== 'directory' && (
-            <span className={`ml-auto text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'} tabular-nums`}>
+            <span className={`ml-auto text-xs ${colors.textTertiary} tabular-nums`}>
               {formatFileSize(item.size)}
             </span>
           )}
@@ -106,9 +122,9 @@ const TreeNode = ({ item, level = 0, onSelect, onToggle }: { item: TreeItem; lev
       </div>
       {item.isExpanded && item.children && (
         <div>
-          {item.children.map((child, index) => (
+          {item.children.map((child) => (
             <TreeNode
-              key={child.path + index}
+              key={child.path}
               item={child}
               level={level + 1}
               onSelect={onSelect}
@@ -121,18 +137,16 @@ const TreeNode = ({ item, level = 0, onSelect, onToggle }: { item: TreeItem; lev
   );
 };
 
-// 文件大小格式化函数
 const formatFileSize = (bytes: number): string => {
   if (bytes === 0) return '0 B';
   const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
 };
 
 const FolderTree: React.FC<FolderTreeProps> = ({ onSelect }) => {
-  const { theme } = useTheme();
-  const isDark = theme === 'dark';
+  const { colors } = useTheme();
   const [folders, setFolders] = useState<TreeItem[]>([]);
 
   const loadDrives = async (): Promise<TreeItem[]> => {
@@ -226,7 +240,7 @@ const FolderTree: React.FC<FolderTreeProps> = ({ onSelect }) => {
   };
 
   return (
-    <div className={`h-full overflow-auto ${isDark ? 'bg-gray-800' : 'bg-white'} ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>
+    <div className={`h-full overflow-auto ${colors.background} ${colors.text}`}>
       {folders.map((folder) => (
         <TreeNode
           key={folder.path}

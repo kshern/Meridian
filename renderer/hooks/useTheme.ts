@@ -41,6 +41,15 @@ export interface ThemeColors {
   // 叠加层
   overlay: string;
   overlayHover: string;
+
+  // 输入框
+  input: {
+    background: string;
+    text: string;
+    placeholder: string;
+    border: string;
+    focusBorder: string;
+  };
 }
 
 const themeColors: Record<Theme, ThemeColors> = {
@@ -74,6 +83,14 @@ const themeColors: Record<Theme, ThemeColors> = {
     
     overlay: 'bg-black/50',
     overlayHover: 'hover:bg-black/60',
+    
+    input: {
+      background: 'bg-white',
+      text: 'text-gray-900',
+      placeholder: 'placeholder-gray-400',
+      border: 'border border-gray-300',
+      focusBorder: 'focus:border-blue-500',
+    },
   },
   dark: {
     background: 'bg-gray-900',
@@ -105,6 +122,14 @@ const themeColors: Record<Theme, ThemeColors> = {
     
     overlay: 'bg-black/60',
     overlayHover: 'hover:bg-black/70',
+    
+    input: {
+      background: 'bg-gray-700',
+      text: 'text-gray-100',
+      placeholder: 'placeholder-gray-500',
+      border: 'border border-gray-600',
+      focusBorder: 'focus:border-blue-400',
+    },
   },
 };
 
