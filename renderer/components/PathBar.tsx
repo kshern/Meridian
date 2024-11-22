@@ -1,3 +1,4 @@
+import FolderOpenIcon from '@heroicons/react/24/outline/FolderOpenIcon';
 import React from 'react';
 
 interface PathBarProps {
@@ -39,12 +40,12 @@ const PathBar: React.FC<PathBarProps> = ({
         ))}
       </div>
       <button
-        onClick={onOpenInExplorer}
-        className="p-2 text-gray-600 hover:bg-gray-200 rounded"
-        title="在资源管理器中打开"
-      >
-        📂
-      </button>
+          onClick={onOpenInExplorer}
+          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+          title="在资源管理器中打开"
+        >
+          <FolderOpenIcon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+        </button>
     </div>
   );
 };

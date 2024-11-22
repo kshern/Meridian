@@ -21,6 +21,8 @@ interface FileAPI {
   handleFileClick(file: MediaFile): Promise<void>;
   saveSidebarWidth(width: number): Promise<void>;
   getSidebarWidth(): Promise<number>;
+  savePathBarVisible(visible: boolean): Promise<void>;
+  getPathBarVisible(): Promise<boolean>;
 }
 
 const handler: FileAPI = {
@@ -67,6 +69,12 @@ const handler: FileAPI = {
   },
   async getSidebarWidth() {
     return ipcRenderer.invoke('get-sidebar-width');
+  },
+  async savePathBarVisible(visible: boolean) {
+    return ipcRenderer.invoke('save-pathbar-visible', visible);
+  },
+  async getPathBarVisible() {
+    return ipcRenderer.invoke('get-pathbar-visible');
   }
 };
 

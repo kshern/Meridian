@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import ThumbnailViewer from '../components/ThumbnailViewer';
 import { MediaFile } from '../../main/fileUtils';
@@ -29,7 +29,32 @@ function Home() {
   } = useFileOperations();
 
   const [showSidebar, setShowSidebar] = useState(true);
+  const [showPathBar, setShowPathBar] = useState(true);
   const { sidebarWidth, isResizing, startResizing } = useSidebarResize();
+
+  // 初始化时从本地加载地址栏显示状态
+  useEffect(() => {
+    const loadPathBarState = async () => {
+      try {
+        const visible = await window.ipc.getPathBarVisible();
+        setShowPathBar(visible);
+      } catch (error) {
+        console.error('Error loading path bar state:', error);
+      }
+    };
+    loadPathBarState();
+  }, []);
+
+  // 切换地址栏显示状态
+  const handleTogglePathBar = async () => {
+    const newState = !showPathBar;
+    setShowPathBar(newState);
+    try {
+      await window.ipc.savePathBarVisible(newState);
+    } catch (error) {
+      console.error('Error saving path bar state:', error);
+    }
+  };
 
   // 过滤文件列表
   const filteredFiles = files.filter((file) => {
@@ -50,15 +75,17 @@ function Home() {
           viewMode={viewMode}
           viewType={viewType}
           showSidebar={showSidebar}
+          showPathBar={showPathBar}
           onOpenDirectory={handleOpenDirectory}
           onGoBack={handleBack}
           onSearchChange={setSearchQuery}
           onViewModeChange={handleViewModeChange}
           onToggleSidebar={() => setShowSidebar(!showSidebar)}
+          onTogglePathBar={handleTogglePathBar}
         />
 
         {/* 地址栏 */}
-        {currentPath && (
+        {currentPath && showPathBar && (
           <PathBar
             currentPath={currentPath}
             onPathSegmentClick={handlePathSegmentClick}
@@ -80,7 +107,6 @@ function Home() {
                 className="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-blue-500 group"
                 onMouseDown={startResizing}
               >
-                {/* 拖拽时的视觉反馈 */}
                 <div className={`absolute inset-0 bg-blue-500 opacity-0 group-hover:opacity-50 transition-opacity ${isResizing ? 'opacity-50' : ''}`} />
               </div>
             </div>

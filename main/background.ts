@@ -148,6 +148,18 @@ const registerIpcHandlers = () => {
     const config = readConfig();
     return config.sidebarWidth || 280; // 默认宽度
   });
+
+  ipcMain.handle('save-pathbar-visible', async (_, visible: boolean) => {
+    const config = readConfig();
+    config.pathBarVisible = visible;
+    saveConfig(config);
+  });
+
+  ipcMain.handle('get-pathbar-visible', async () => {
+    const config = readConfig();
+    // 默认显示地址栏
+    return config.pathBarVisible === undefined ? true : config.pathBarVisible;
+  });
 }
 
 // 处理启动参数
