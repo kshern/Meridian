@@ -107,6 +107,47 @@ const registerIpcHandlers = () => {
       throw error;
     }
   });
+
+  // 获取配置文件路径
+  const getConfigPath = () => {
+    return path.join(app.getPath('userData'), 'config.json');
+  };
+
+  // 读取配置
+  const readConfig = () => {
+    const configPath = getConfigPath();
+    try {
+      if (fs.existsSync(configPath)) {
+        const data = fs.readFileSync(configPath, 'utf8');
+        return JSON.parse(data);
+      }
+    } catch (error) {
+      console.error('Error reading config:', error);
+    }
+    return {};
+  };
+
+  // 保存配置
+  const saveConfig = (config: any) => {
+    const configPath = getConfigPath();
+    try {
+      fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+    } catch (error) {
+      console.error('Error saving config:', error);
+    }
+  };
+
+  // 添加 IPC 处理器
+  ipcMain.handle('save-sidebar-width', async (_, width: number) => {
+    const config = readConfig();
+    config.sidebarWidth = width;
+    saveConfig(config);
+  });
+
+  ipcMain.handle('get-sidebar-width', async () => {
+    const config = readConfig();
+    return config.sidebarWidth || 280; // 默认宽度
+  });
 }
 
 // 处理启动参数

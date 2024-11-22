@@ -8,6 +8,21 @@ export const useSidebarResize = () => {
   const [sidebarWidth, setSidebarWidth] = useState(DEFAULT_SIDEBAR_WIDTH);
   const [isResizing, setIsResizing] = useState(false);
 
+  // 初始化时从本地加载宽度
+  useEffect(() => {
+    const loadSavedWidth = async () => {
+      try {
+        const savedWidth = await window.ipc.getSidebarWidth();
+        if (savedWidth && savedWidth >= MIN_SIDEBAR_WIDTH && savedWidth <= MAX_SIDEBAR_WIDTH) {
+          setSidebarWidth(savedWidth);
+        }
+      } catch (error) {
+        console.error('Error loading sidebar width:', error);
+      }
+    };
+    loadSavedWidth();
+  }, []);
+
   const startResizing = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     setIsResizing(true);
@@ -21,7 +36,9 @@ export const useSidebarResize = () => {
     // 移除全局样式
     document.body.style.cursor = '';
     document.body.style.userSelect = '';
-  }, []);
+    // 保存当前宽度到本地
+    window.ipc.saveSidebarWidth(sidebarWidth);
+  }, [sidebarWidth]);
 
   const resize = useCallback((mouseMoveEvent: MouseEvent) => {
     if (isResizing) {

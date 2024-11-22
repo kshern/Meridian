@@ -19,6 +19,8 @@ interface FileAPI {
   convertToSystemPath(path: string): string;
   getDrives(): Promise<string[]>;
   handleFileClick(file: MediaFile): Promise<void>;
+  saveSidebarWidth(width: number): Promise<void>;
+  getSidebarWidth(): Promise<number>;
 }
 
 const handler: FileAPI = {
@@ -59,6 +61,12 @@ const handler: FileAPI = {
   },
   async handleFileClick(file: MediaFile) {
     return ipcRenderer.invoke('handle-file-click', file);
+  },
+  async saveSidebarWidth(width: number) {
+    return ipcRenderer.invoke('save-sidebar-width', width);
+  },
+  async getSidebarWidth() {
+    return ipcRenderer.invoke('get-sidebar-width');
   }
 };
 
