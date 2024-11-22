@@ -19,15 +19,15 @@ interface TreeItem {
 const FileIcon = ({ type }: { type: string }) => {
   switch (type) {
     case 'directory':
-      return <FolderIcon className="w-5 h-5 text-yellow-500" />;
+      return <FolderIcon className="w-5 h-5 text-yellow-500 flex-shrink-0" />;
     case 'image':
-      return <PhotoIcon className="w-5 h-5 text-blue-500" />;
+      return <PhotoIcon className="w-5 h-5 text-blue-500 flex-shrink-0" />;
     case 'video':
-      return <FilmIcon className="w-5 h-5 text-purple-500" />;
+      return <FilmIcon className="w-5 h-5 text-purple-500 flex-shrink-0" />;
     case 'text':
-      return <DocumentTextIcon className="w-5 h-5 text-gray-500" />;
+      return <DocumentTextIcon className="w-5 h-5 text-gray-500 flex-shrink-0" />;
     default:
-      return <DocumentIcon className="w-5 h-5 text-gray-400" />;
+      return <DocumentIcon className="w-5 h-5 text-gray-400 flex-shrink-0" />;
   }
 };
 
@@ -37,7 +37,9 @@ const TreeNode = ({ item, level = 0, onSelect, onToggle }: { item: TreeItem; lev
   const handleClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (item.type === 'directory') {
-      onToggle(item.path);
+      if (!item.isExpanded) {  
+        onToggle(item.path);
+      }
       onSelect(window.ipc.convertToSystemPath(item.path));
     } else if (item.type === 'image' || item.type === 'video') {
       try {
@@ -75,7 +77,10 @@ const TreeNode = ({ item, level = 0, onSelect, onToggle }: { item: TreeItem; lev
       >
         <div className="flex items-center flex-1 min-w-0 space-x-2">
           {item.type === 'directory' && (
-            <div className="p-0.5 -ml-1">
+            <div 
+              className="p-0.5 -ml-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-sm cursor-pointer"
+              onClick={handleToggleClick}
+            >
               {item.isExpanded ? (
                 <ChevronDownIcon className="w-3.5 h-3.5 text-gray-500" />
               ) : (

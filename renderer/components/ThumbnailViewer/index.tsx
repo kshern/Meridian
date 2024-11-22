@@ -2,6 +2,7 @@ import React from 'react';
 import { List, AutoSizer } from 'react-virtualized';
 import { MediaFile } from '../../../main/fileUtils';
 import LazyImage from './LazyImage';
+import { FolderIcon, PhotoIcon, DocumentIcon, FilmIcon } from '@heroicons/react/24/outline';
 
 interface ThumbnailViewerProps {
   files: MediaFile[];
@@ -19,13 +20,15 @@ const ThumbnailViewer: React.FC<ThumbnailViewerProps> = ({
   const getFileIcon = (file: MediaFile) => {
     switch (file.type) {
       case 'directory':
-        return '📁';
+        return <FolderIcon className="w-8 h-8 flex-shrink-0" />;
       case 'video':
-        return '🎬';
+        return <FilmIcon className="w-8 h-8 flex-shrink-0" />;
       case 'text':
-        return '📄';
+        return <DocumentIcon className="w-8 h-8 flex-shrink-0" />;
+      case 'image':
+        return <PhotoIcon className="w-8 h-8 flex-shrink-0" />;
       default:
-        return null;
+        return <DocumentIcon className="w-8 h-8 flex-shrink-0" />;
     }
   };
 
@@ -60,7 +63,7 @@ const ThumbnailViewer: React.FC<ThumbnailViewerProps> = ({
         />
       ) : (
         <div className="flex items-center justify-center h-full bg-surface">
-          <span className="text-4xl">{getFileIcon(file)}</span>
+          {getFileIcon(file)}
         </div>
       )}
       <div className="media-item-name">
@@ -81,7 +84,7 @@ const ThumbnailViewer: React.FC<ThumbnailViewerProps> = ({
       }}
       title={file.name}
     >
-      <span className="text-2xl opacity-60">{getFileIcon(file) || '🖼️'}</span>
+      {getFileIcon(file)}
       <span className="flex-1 truncate hover:text-primary transition-colors">{file.name}</span>
     </div>
   );
