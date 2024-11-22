@@ -69,13 +69,37 @@ export const useFileOperations = () => {
     }
   };
 
-  const handleFileClick = (file: MediaFile) => {
+  const handleFileClick = async (file: MediaFile) => {
     if (file.type === 'image' || file.type === 'video') {
-      const mediaFiles = files.filter(f => f.type === 'image' || f.type === 'video');
-      const index = mediaFiles.findIndex(f => f.path === file.path);
-      if (index !== -1) {
-        setSelectedFileIndex(index);
-        setViewMode('detail');
+      try {
+        // 获取文件所在目录的路径
+        const dirPath = file.path.substring(0, file.path.lastIndexOf('\\'));
+        const appDirPath = window.ipc.convertToAppPath(dirPath);
+        
+        // 如果不在当前目录，先切换到文件所在目录
+        if (appDirPath !== currentPath) {
+          const mediaFiles = await window.ipc.scanDirectory(dirPath);
+          setFiles(mediaFiles);
+          setCurrentPath(appDirPath);
+          
+          // 在新的文件列表中找到目标文件的索引
+          const newMediaFiles = mediaFiles.filter(f => f.type === 'image' || f.type === 'video');
+          const index = newMediaFiles.findIndex(f => f.path === file.path);
+          if (index !== -1) {
+            setSelectedFileIndex(index);
+            setViewMode('detail');
+          }
+        } else {
+          // 如果在当前目录，直接查找并设置索引
+          const mediaFiles = files.filter(f => f.type === 'image' || f.type === 'video');
+          const index = mediaFiles.findIndex(f => f.path === file.path);
+          if (index !== -1) {
+            setSelectedFileIndex(index);
+            setViewMode('detail');
+          }
+        }
+      } catch (error) {
+        console.error('Error handling file click:', error);
       }
     }
   };
@@ -87,7 +111,7 @@ export const useFileOperations = () => {
     });
 
     return cleanup;
-  }, [files]);
+  }, [currentPath, files]);
 
   const handlePathSegmentClick = async (index: number) => {
     const pathParts = currentPath.split('>').filter(Boolean);
