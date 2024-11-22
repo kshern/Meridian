@@ -37,6 +37,7 @@ const TreeNode = ({ item, level = 0, onSelect, onToggle }: { item: TreeItem; lev
   const handleClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (item.type === 'directory') {
+      onToggle(item.path);
       onSelect(window.ipc.convertToSystemPath(item.path));
     } else if (item.type === 'image' || item.type === 'video') {
       try {
@@ -62,27 +63,30 @@ const TreeNode = ({ item, level = 0, onSelect, onToggle }: { item: TreeItem; lev
   return (
     <div>
       <div
-        className="flex items-center py-1 px-2 hover:bg-gray-100 cursor-pointer"
-        style={{ paddingLeft: `${indent}px` }}
+        className={`
+          flex items-center py-1.5 px-3 
+          hover:bg-gray-50 dark:hover:bg-gray-700/50
+          cursor-pointer transition-colors duration-200
+          rounded-lg mx-1 my-0.5
+          ${item.type === 'directory' ? 'font-medium' : 'font-normal'}
+        `}
+        style={{ paddingLeft: `${indent + 12}px` }}
         onClick={handleClick}
       >
-        <div className="flex items-center flex-1 min-w-0">
+        <div className="flex items-center flex-1 min-w-0 space-x-2">
           {item.type === 'directory' && (
-            <button
-              onClick={handleToggleClick}
-              className="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded"
-            >
+            <div className="p-0.5 -ml-1">
               {item.isExpanded ? (
-                <ChevronDownIcon className="w-4 h-4 mr-1" />
+                <ChevronDownIcon className="w-3.5 h-3.5 text-gray-500" />
               ) : (
-                <ChevronRightIcon className="w-4 h-4 mr-1" />
+                <ChevronRightIcon className="w-3.5 h-3.5 text-gray-500" />
               )}
-            </button>
+            </div>
           )}
           <FileIcon type={item.type} />
-          <span className="ml-2 truncate">{item.name}</span>
+          <span className="truncate text-sm text-gray-700 dark:text-gray-200">{item.name}</span>
           {item.size && item.type !== 'directory' && (
-            <span className="ml-2 text-xs text-gray-500">
+            <span className="ml-auto text-xs text-gray-400 dark:text-gray-500 tabular-nums">
               {formatFileSize(item.size)}
             </span>
           )}
