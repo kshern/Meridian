@@ -2,7 +2,7 @@ import path from 'path'
 import { app, ipcMain, dialog, shell } from 'electron'
 import serve from 'electron-serve'
 import { createWindow } from './helpers'
-import { scanDirectory, getFileContent } from './fileUtils'
+import { scanDirectory, getFileContent, MediaFile } from './fileUtils'
 import * as fs from 'fs'
 
 // 设置日志输出
@@ -160,6 +160,25 @@ const registerIpcHandlers = () => {
     // 默认显示地址栏
     return config.pathBarVisible === undefined ? true : config.pathBarVisible;
   });
+
+  // 处理窗口最小化
+  ipcMain.handle('minimize-window', () => {
+    mainWindow.minimize();
+  });
+
+  // 处理窗口最大化/还原
+  ipcMain.handle('maximize-window', () => {
+    if (mainWindow.isMaximized()) {
+      mainWindow.unmaximize();
+    } else {
+      mainWindow.maximize();
+    }
+  });
+
+  // 处理窗口关闭
+  ipcMain.handle('close-window', () => {
+    mainWindow.close();
+  });
 }
 
 // 处理启动参数
@@ -229,6 +248,7 @@ if (!gotTheLock) {
     mainWindow = createWindow('main', {
       width: 1000,
       height: 600,
+      frame: false,
       webPreferences: {
         nodeIntegration: false,
         contextIsolation: true,

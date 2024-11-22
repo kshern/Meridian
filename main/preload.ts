@@ -5,6 +5,7 @@ import * as path from 'path';
 declare global {
   interface Window {
     ipc: FileAPI;
+    electron: ElectronAPI;
   }
 }
 
@@ -23,6 +24,18 @@ interface FileAPI {
   getSidebarWidth(): Promise<number>;
   savePathBarVisible(visible: boolean): Promise<void>;
   getPathBarVisible(): Promise<boolean>;
+}
+
+interface ElectronAPI {
+  scanDirectory(dirPath: string): Promise<MediaFile[]>;
+  getDrives(): Promise<string[]>;
+  openDirectory(): Promise<string>;
+  readTextFile(filePath: string): Promise<string>;
+  openInExplorer(path: string): Promise<void>;
+  handleFileClick(file: any): Promise<void>;
+  minimize(): Promise<void>;
+  maximize(): Promise<void>;
+  close(): Promise<void>;
 }
 
 const handler: FileAPI = {
@@ -78,6 +91,19 @@ const handler: FileAPI = {
   }
 };
 
+const electronHandler: ElectronAPI = {
+  scanDirectory: (dirPath: string) => ipcRenderer.invoke('scan-directory', dirPath),
+  getDrives: () => ipcRenderer.invoke('get-drives'),
+  openDirectory: () => ipcRenderer.invoke('open-directory'),
+  readTextFile: (filePath: string) => ipcRenderer.invoke('read-text-file', filePath),
+  openInExplorer: (path: string) => ipcRenderer.invoke('open-in-explorer', path),
+  handleFileClick: (file: any) => ipcRenderer.invoke('handle-file-click', file),
+  minimize: () => ipcRenderer.invoke('minimize-window'),
+  maximize: () => ipcRenderer.invoke('maximize-window'),
+  close: () => ipcRenderer.invoke('close-window')
+};
+
 contextBridge.exposeInMainWorld('ipc', handler);
+contextBridge.exposeInMainWorld('electron', electronHandler);
 
 export type IpcHandler = typeof handler;

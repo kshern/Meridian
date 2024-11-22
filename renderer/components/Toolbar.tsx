@@ -9,23 +9,27 @@ import {
   MagnifyingGlassIcon,
   XMarkIcon,
   ListBulletIcon,
-  Squares2X2Icon
+  Squares2X2Icon,
+  MinusIcon,
+  Square2StackIcon,
+  XCircleIcon
 } from '@heroicons/react/24/outline';
 
 interface ToolbarProps {
   currentPath: string;
   searchQuery: string;
   viewMode: string;
-  viewType: string;
+  viewType: 'grid' | 'list';
   showSidebar: boolean;
   showPathBar: boolean;
   onOpenDirectory: () => void;
   onGoBack: () => void;
   onSearchChange: (query: string) => void;
-  onViewModeChange: (mode: string) => void;
+  onViewModeChange: (mode: 'grid' | 'list') => void;
   onToggleSidebar: () => void;
   onTogglePathBar: () => void;
 }
+
 
 const Toolbar: React.FC<ToolbarProps> = ({
   currentPath,
@@ -42,9 +46,9 @@ const Toolbar: React.FC<ToolbarProps> = ({
   onTogglePathBar
 }) => {
   return (
-    <div className="flex items-center p-2 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+    <div className="flex items-center p-2 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 select-none" style={{ WebkitAppRegion: 'drag' } as any}>
       {/* 左侧导航按钮组 */}
-      <div className="flex items-center space-x-1">
+      <div className="flex items-center space-x-1" style={{ WebkitAppRegion: 'no-drag'} as any}>
         <button
           onClick={onToggleSidebar}
           className={`p-2 rounded-lg transition-colors ${
@@ -84,7 +88,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
       <div className="flex-1" />
 
       {/* 右侧功能区 */}
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center space-x-2" style={{ WebkitAppRegion: 'no-drag' } as any}>
         {/* 搜索框 */}
         <div className="relative w-64">
           <MagnifyingGlassIcon className="w-4 h-4 absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" />
@@ -119,6 +123,33 @@ const Toolbar: React.FC<ToolbarProps> = ({
             <Squares2X2Icon className="w-5 h-5" />
           )}
         </button>
+
+        <div className="h-5 mx-1 border-l border-gray-300 dark:border-gray-600" />
+
+        {/* 窗口控制按钮 */}
+        <div className="flex items-center space-x-1">
+          <button
+            onClick={() => window.electron.minimize()}
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-600 dark:text-gray-300"
+            title="最小化"
+          >
+            <MinusIcon className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => window.electron.maximize()}
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-600 dark:text-gray-300"
+            title="最大化"
+          >
+            <Square2StackIcon className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => window.electron.close()}
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-600 hover:text-red-600 dark:hover:text-red-400"
+            title="关闭"
+          >
+            <XCircleIcon className="w-4 h-4" />
+          </button>
+        </div>
       </div>
     </div>
   );
