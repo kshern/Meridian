@@ -7,6 +7,7 @@ import Toolbar from '../components/Toolbar';
 import PathBar from '../components/PathBar';
 import FolderTree from '../components/FolderTree';
 import { useFileOperations } from '../hooks/useFileOperations';
+import { useSidebarResize } from '../hooks/useSidebarResize';
 
 function Home() {
   const {
@@ -28,6 +29,7 @@ function Home() {
   } = useFileOperations();
 
   const [showSidebar, setShowSidebar] = useState(true);
+  const { sidebarWidth, isResizing, startResizing } = useSidebarResize();
 
   // 过滤文件列表
   const filteredFiles = files.filter((file) => {
@@ -68,8 +70,19 @@ function Home() {
         <div className="flex flex-1 overflow-hidden">
           {/* 侧边栏 */}
           {showSidebar && (
-            <div className="w-64 border-r border-gray-200 dark:border-gray-700">
+            <div 
+              className="border-r border-gray-200 dark:border-gray-700 relative" 
+              style={{ width: sidebarWidth, minWidth: sidebarWidth }}
+            >
               <FolderTree onSelect={handleDirectoryClick} />
+              {/* 拖拽手柄 */}
+              <div
+                className="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-blue-500 group"
+                onMouseDown={startResizing}
+              >
+                {/* 拖拽时的视觉反馈 */}
+                <div className={`absolute inset-0 bg-blue-500 opacity-0 group-hover:opacity-50 transition-opacity ${isResizing ? 'opacity-50' : ''}`} />
+              </div>
             </div>
           )}
           
