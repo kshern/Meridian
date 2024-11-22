@@ -9,6 +9,7 @@ interface ThumbnailViewerProps {
   onDirectoryClick: (path: string) => void;
   onFileClick: (file: MediaFile) => void;
   viewType: 'grid' | 'list';
+  theme: 'light' | 'dark';
 }
 
 const ThumbnailViewer: React.FC<ThumbnailViewerProps> = ({
@@ -16,6 +17,7 @@ const ThumbnailViewer: React.FC<ThumbnailViewerProps> = ({
   onDirectoryClick,
   onFileClick,
   viewType,
+  theme,
 }) => {
   const getFileIcon = (file: MediaFile) => {
     switch (file.type) {
@@ -45,7 +47,7 @@ const ThumbnailViewer: React.FC<ThumbnailViewerProps> = ({
 
   const renderGridItem = (file: MediaFile) => (
     <div
-      className="media-item group"
+      className="media-item group relative rounded-lg overflow-hidden cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:shadow-lg"
       onClick={() => {
         if (file.type === 'directory') {
           onDirectoryClick?.(file.path);
@@ -62,19 +64,23 @@ const ThumbnailViewer: React.FC<ThumbnailViewerProps> = ({
           className="w-full h-full object-cover"
         />
       ) : (
-        <div className="flex items-center justify-center h-full bg-surface">
-          {getFileIcon(file)}
+        <div className="flex items-center justify-center h-full bg-surface/50 dark:bg-gray-800/50 backdrop-blur-sm">
+          <div className="text-gray-600 dark:text-gray-300 group-hover:text-gray-800 dark:group-hover:text-white transition-colors">
+            {getFileIcon(file)}
+          </div>
         </div>
       )}
-      <div className="media-item-name">
-        {file.name}
+      <div className="absolute bottom-0 left-0 right-0 px-3 py-2 bg-black/50 backdrop-blur-sm">
+        <p className="text-sm truncate text-white/90 group-hover:text-white transition-colors">
+          {file.name}
+        </p>
       </div>
     </div>
   );
 
   const renderListItem = (file: MediaFile) => (
     <div
-      className="group flex items-center gap-4 h-12 px-6 w-full cursor-pointer transition-colors hover:bg-white/10"
+      className="group flex items-center gap-4 h-12 px-4 w-full cursor-pointer transition-all duration-200 hover:bg-gray-100 dark:hover:bg-gray-700/50"
       onClick={() => {
         if (file.type === 'directory') {
           onDirectoryClick?.(file.path);
@@ -84,8 +90,12 @@ const ThumbnailViewer: React.FC<ThumbnailViewerProps> = ({
       }}
       title={file.name}
     >
-      {getFileIcon(file)}
-      <span className="flex-1 truncate hover:text-primary transition-colors">{file.name}</span>
+      <div className="text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-200 transition-colors">
+        {getFileIcon(file)}
+      </div>
+      <span className="flex-1 truncate text-gray-700 dark:text-gray-200 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">
+        {file.name}
+      </span>
     </div>
   );
 
@@ -93,9 +103,21 @@ const ThumbnailViewer: React.FC<ThumbnailViewerProps> = ({
     if (viewType === 'list') {
       const file = files[index];
       const isOdd = index % 2 === 1;
-      const backgroundColor = isOdd ? 'rgba(255, 255, 255, 0.03)' : 'rgba(255, 255, 255, 0.01)';
+      const backgroundColor = isOdd 
+        ? 'rgba(0, 0, 0, 0.02)'
+        : 'rgba(0, 0, 0, 0.01)';
+      const darkBackgroundColor = isOdd
+        ? 'rgba(255, 255, 255, 0.03)'
+        : 'rgba(255, 255, 255, 0.01)';
       return (
-        <div key={key} style={{ ...style, backgroundColor }} className="flex items-center">
+        <div 
+          key={key} 
+          style={{ 
+            ...style, 
+            backgroundColor: theme === 'dark' ? darkBackgroundColor : backgroundColor 
+          }} 
+          className="flex items-center"
+        >
           {renderListItem(file)}
         </div>
       );
@@ -118,7 +140,7 @@ const ThumbnailViewer: React.FC<ThumbnailViewerProps> = ({
   };
 
   return (
-    <div className={`h-full overflow-auto ${viewType}`}>
+    <div className="h-full bg-white dark:bg-gray-900">
       <AutoSizer>
         {({ width, height }) => {
           const columnsCount = getColumnsCount(width);

@@ -8,6 +8,7 @@ import PathBar from '../components/PathBar';
 import FolderTree from '../components/FolderTree';
 import { useFileOperations } from '../hooks/useFileOperations';
 import { useSidebarResize } from '../hooks/useSidebarResize';
+import { useTheme } from '../hooks/useTheme';
 
 function Home() {
   const {
@@ -27,6 +28,8 @@ function Home() {
     handleViewModeChange,
     getMediaFiles,
   } = useFileOperations();
+
+  const { theme } = useTheme();
 
   const [showSidebar, setShowSidebar] = useState(true);
   const [showPathBar, setShowPathBar] = useState(true);
@@ -68,7 +71,7 @@ function Home() {
       <Head>
         <title>FReader</title>
       </Head>
-      <div className="flex flex-col h-screen">
+      <div className={`flex flex-col h-screen bg-white dark:bg-gray-900`}>
         <Toolbar
           currentPath={currentPath}
           searchQuery={searchQuery}
@@ -120,6 +123,7 @@ function Home() {
                 viewType={viewType}
                 onFileClick={handleFileClick}
                 onDirectoryClick={handleDirectoryClick}
+                theme={theme}
               />
             ) : (
               <MediaViewer

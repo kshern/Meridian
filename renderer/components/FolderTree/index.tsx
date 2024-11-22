@@ -71,6 +71,7 @@ const TreeNode = ({ item, level = 0, onSelect, onToggle }: { item: TreeItem; lev
           cursor-pointer transition-colors duration-200
           rounded-lg mx-1 my-0.5
           ${item.type === 'directory' ? 'font-medium' : 'font-normal'}
+          text-gray-700 dark:text-gray-200
         `}
         style={{ paddingLeft: `${indent + 12}px` }}
         onClick={handleClick}
@@ -82,9 +83,9 @@ const TreeNode = ({ item, level = 0, onSelect, onToggle }: { item: TreeItem; lev
               onClick={handleToggleClick}
             >
               {item.isExpanded ? (
-                <ChevronDownIcon className="w-3.5 h-3.5 text-gray-500" />
+                <ChevronDownIcon className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />
               ) : (
-                <ChevronRightIcon className="w-3.5 h-3.5 text-gray-500" />
+                <ChevronRightIcon className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />
               )}
             </div>
           )}
