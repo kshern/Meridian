@@ -22,10 +22,14 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [layoutMode, setLayoutMode] = useState<LayoutMode>('horizontal');
   const [scale, setScale] = useState(1);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [position, setPosition] = useState({ x: 0, y: 0 });
   const observerRef = useRef<IntersectionObserver | null>(null);
   const mediaRefs = useRef<Map<number, HTMLDivElement>>(new Map());
   const containerRef = useRef<HTMLDivElement | null>(null);
   const currentItemRef = useRef<HTMLDivElement | null>(null);
+  const imageRef = useRef<HTMLImageElement | null>(null);
 
   useEffect(() => {
     setCurrentIndex(initialIndex);
@@ -107,7 +111,72 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
 
   useEffect(() => {
     setScale(1);
+    setPosition({ x: 0, y: 0 }); // 重置位置
   }, [currentIndex, layoutMode]);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (scale > 1 && layoutMode === 'horizontal' && imageRef.current && containerRef.current) {
+      const imgRect = imageRef.current.getBoundingClientRect();
+      const containerRect = containerRef.current.getBoundingClientRect();
+
+      // 只有当图片尺寸超过容器时才允许拖动
+      const canDragX = imgRect.width > containerRect.width;
+      const canDragY = imgRect.height > containerRect.height;
+
+      if (canDragX || canDragY) {
+        setIsDragging(true);
+        setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y });
+      }
+    }
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (isDragging && scale > 1 && imageRef.current && containerRef.current) {
+      const imgRect = imageRef.current.getBoundingClientRect();
+      const containerRect = containerRef.current.getBoundingClientRect();
+
+      // 计算新位置
+      let newX = e.clientX - dragStart.x;
+      let newY = e.clientY - dragStart.y;
+
+      // 计算图片的实际尺寸（包含缩放）
+      const scaledWidth = imgRect.width;
+      const scaledHeight = imgRect.height;
+
+      // 计算最大可拖动范围
+      const maxX = Math.max(0, (scaledWidth - containerRect.width) / 2);
+      const maxY = Math.max(0, (scaledHeight - containerRect.height) / 2);
+
+      // 限制水平拖动范围
+      if (scaledWidth > containerRect.width) {
+        newX = Math.min(Math.max(newX, -maxX), maxX);
+      } else {
+        newX = 0;
+      }
+
+      // 限制垂直拖动范围
+      if (scaledHeight > containerRect.height) {
+        newY = Math.min(Math.max(newY, -maxY), maxY);
+      } else {
+        newY = 0;
+      }
+
+      setPosition({ x: newX, y: newY });
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  useEffect(() => {
+    const handleGlobalMouseUp = () => {
+      setIsDragging(false);
+    };
+
+    window.addEventListener('mouseup', handleGlobalMouseUp);
+    return () => window.removeEventListener('mouseup', handleGlobalMouseUp);
+  }, []);
 
   const handlePrevious = () => {
     setCurrentIndex((prev) => (prev > 0 ? prev - 1 : files.length - 1));
@@ -171,30 +240,38 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
   }, []);
 
   const renderMediaItem = (file: MediaFile, index: number) => {
-    const isActive = index === currentIndex;
     const isImage = file.type === 'image';
-    const imageStyle = layoutMode === 'horizontal' && isImage ? {
-      transform: `scale(${scale})`,
-      transition: 'transform 0.1s ease-out'
+    const isVideo = file.type === 'video';
+    const isCurrent = index === currentIndex;
+
+    const mediaStyle = layoutMode === 'horizontal' && isCurrent && isImage ? {
+      transform: `scale(${scale}) translate(${position.x / scale}px, ${position.y / scale}px)`,
+      cursor: isDragging ? 'grabbing' : (scale > 1 ? 'grab' : 'default'),
     } : undefined;
 
     return (
-      <div 
+      <div
         key={file.path}
-        ref={(el) => setMediaRef(el, index)}
+        className={`${styles.media_item} ${isCurrent ? styles.current : ''}`}
+        ref={(el) => {
+          if (el) mediaRefs.current.set(index, el);
+          if (isCurrent) currentItemRef.current = el;
+        }}
         data-index={index}
-        className={`${styles.media_container} ${isActive ? styles.active : ''}`}
-        onClick={() => setCurrentIndex(index)}
-        // onWheel={layoutMode === 'horizontal' && isActive && isImage ? handleWheel : undefined}
+        onMouseDown={isCurrent && isImage ? handleMouseDown : undefined}
+        onMouseMove={isCurrent && isImage ? handleMouseMove : undefined}
+        onMouseUp={isCurrent && isImage ? handleMouseUp : undefined}
       >
         {isImage ? (
           <img
+            ref={isCurrent ? imageRef : null}
             src={`file://${file.path}`}
             alt={file.name}
+            className={styles.image}
+            style={mediaStyle}
             draggable={false}
-            style={imageStyle}
           />
-        ) : file.type === 'video' ? (
+        ) : isVideo ? (
           <div className="w-full h-full flex items-center justify-center">
             <ReactPlayer
               url={`file://${file.path}`}
