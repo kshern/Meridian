@@ -27,7 +27,6 @@ export interface ThemeColors {
   imageIcon: string;
   videoIcon: string;
   textIcon: string;
-  documentIcon: string;
   
   // 边框颜色
   border: string;
@@ -42,34 +41,6 @@ export interface ThemeColors {
   // 叠加层
   overlay: string;
   overlayHover: string;
-
-  // 工具栏
-  toolbarBackground: string;
-  toolbarBorder: string;
-  toolbarButtonActive: string;
-  toolbarButtonActiveHover: string;
-  toolbarButtonInactive: string;
-  toolbarButtonInactiveHover: string;
-  toolbarDivider: string;
-  toolbarInput: string;
-  toolbarInputBorder: string;
-  toolbarInputFocus: string;
-  toolbarInputPlaceholder: string;
-  toolbarActiveText: string;
-  toolbarCloseButton: string;
-  toolbarCloseButtonHover: string;
-  toolbarSearchIcon: string;
-  toolbarSearchIconHover: string;
-
-  // 路径栏
-  pathBarBackground: string;
-  pathBarBorder: string;
-  pathBarText: string;
-  pathBarTextHover: string;
-  pathBarSegmentHover: string;
-  pathBarSeparator: string;
-  pathBarButton: string;
-  pathBarButtonHover: string;
 }
 
 const themeColors: Record<Theme, ThemeColors> = {
@@ -82,9 +53,9 @@ const themeColors: Record<Theme, ThemeColors> = {
     backgroundTertiaryHover: 'hover:bg-gray-200',
     
     text: 'text-gray-900',
-    textSecondary: 'text-gray-600',
-    textTertiary: 'text-gray-400',
-    textHover: 'hover:text-gray-700',
+    textSecondary: 'text-gray-700',
+    textTertiary: 'text-gray-500',
+    textHover: 'hover:text-gray-900',
     
     icon: 'text-gray-500',
     iconHover: 'hover:text-gray-700',
@@ -93,45 +64,16 @@ const themeColors: Record<Theme, ThemeColors> = {
     imageIcon: 'text-blue-500',
     videoIcon: 'text-purple-500',
     textIcon: 'text-gray-500',
-    documentIcon: 'text-gray-400',
     
     border: 'border-gray-200',
     borderHover: 'hover:border-gray-300',
     
-    divider: 'border-gray-200',
+    divider: 'divide-gray-200',
     
-    shadow: 'shadow-md',
+    shadow: 'shadow-sm',
     
     overlay: 'bg-black/50',
     overlayHover: 'hover:bg-black/60',
-
-    // 工具栏
-    toolbarBackground: 'bg-white',
-    toolbarBorder: 'border-gray-200',
-    toolbarButtonActive: 'bg-gray-100 text-blue-600',
-    toolbarButtonActiveHover: 'hover:bg-gray-200',
-    toolbarButtonInactive: 'text-gray-600',
-    toolbarButtonInactiveHover: 'hover:bg-gray-100 hover:text-gray-900',
-    toolbarDivider: 'border-gray-300',
-    toolbarInput: 'bg-white text-gray-900',
-    toolbarInputBorder: 'border-gray-300',
-    toolbarInputFocus: 'focus:border-blue-500',
-    toolbarInputPlaceholder: 'placeholder-gray-400',
-    toolbarActiveText: 'text-blue-600',
-    toolbarCloseButton: 'text-gray-600',
-    toolbarCloseButtonHover: 'hover:bg-red-500 hover:text-white',
-    toolbarSearchIcon: 'text-gray-400',
-    toolbarSearchIconHover: 'hover:text-gray-600',
-
-    // 路径栏
-    pathBarBackground: 'bg-white',
-    pathBarBorder: 'border-gray-200',
-    pathBarText: 'text-gray-600',
-    pathBarTextHover: 'hover:text-gray-900',
-    pathBarSegmentHover: 'hover:bg-gray-100',
-    pathBarSeparator: 'text-gray-400',
-    pathBarButton: 'text-gray-600',
-    pathBarButtonHover: 'hover:text-gray-900 hover:bg-gray-100',
   },
   dark: {
     background: 'bg-gray-900',
@@ -143,7 +85,7 @@ const themeColors: Record<Theme, ThemeColors> = {
     
     text: 'text-gray-100',
     textSecondary: 'text-gray-300',
-    textTertiary: 'text-gray-500',
+    textTertiary: 'text-gray-400',
     textHover: 'hover:text-white',
     
     icon: 'text-gray-400',
@@ -153,45 +95,16 @@ const themeColors: Record<Theme, ThemeColors> = {
     imageIcon: 'text-blue-400',
     videoIcon: 'text-purple-400',
     textIcon: 'text-gray-400',
-    documentIcon: 'text-gray-500',
     
     border: 'border-gray-700',
     borderHover: 'hover:border-gray-600',
     
-    divider: 'border-gray-700',
+    divider: 'divide-gray-700',
     
-    shadow: 'shadow-lg shadow-black/50',
+    shadow: 'shadow-md',
     
-    overlay: 'bg-black/70',
-    overlayHover: 'hover:bg-black/80',
-
-    // 工具栏
-    toolbarBackground: 'bg-gray-900',
-    toolbarBorder: 'border-gray-700',
-    toolbarButtonActive: 'bg-gray-700 text-blue-400',
-    toolbarButtonActiveHover: 'hover:bg-gray-600',
-    toolbarButtonInactive: 'text-gray-400',
-    toolbarButtonInactiveHover: 'hover:bg-gray-700 hover:text-gray-200',
-    toolbarDivider: 'border-gray-600',
-    toolbarInput: 'bg-gray-700 text-gray-100',
-    toolbarInputBorder: 'border-gray-600',
-    toolbarInputFocus: 'focus:border-blue-400',
-    toolbarInputPlaceholder: 'placeholder-gray-500',
-    toolbarActiveText: 'text-blue-400',
-    toolbarCloseButton: 'text-gray-400',
-    toolbarCloseButtonHover: 'hover:bg-red-600/90 hover:text-white',
-    toolbarSearchIcon: 'text-gray-500',
-    toolbarSearchIconHover: 'hover:text-gray-300',
-
-    // 路径栏
-    pathBarBackground: 'bg-gray-900',
-    pathBarBorder: 'border-gray-700',
-    pathBarText: 'text-gray-400',
-    pathBarTextHover: 'hover:text-gray-200',
-    pathBarSegmentHover: 'hover:bg-gray-700',
-    pathBarSeparator: 'text-gray-600',
-    pathBarButton: 'text-gray-400',
-    pathBarButtonHover: 'hover:text-gray-200 hover:bg-gray-700',
+    overlay: 'bg-black/60',
+    overlayHover: 'hover:bg-black/70',
   },
 };
 

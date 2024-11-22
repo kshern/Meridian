@@ -18,24 +18,26 @@ interface TreeItem {
 }
 
 const FileIcon = ({ type }: { type: string }) => {
-  const { theme, colors } = useTheme();
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
 
   switch (type) {
     case 'directory':
-      return <FolderIcon className={`w-5 h-5 ${colors.folderIcon} flex-shrink-0`} />;
+      return <FolderIcon className={`w-5 h-5 ${isDark ? 'text-yellow-400' : 'text-yellow-500'} flex-shrink-0`} />;
     case 'image':
-      return <PhotoIcon className={`w-5 h-5 ${colors.imageIcon} flex-shrink-0`} />;
+      return <PhotoIcon className={`w-5 h-5 ${isDark ? 'text-blue-400' : 'text-blue-500'} flex-shrink-0`} />;
     case 'video':
-      return <FilmIcon className={`w-5 h-5 ${colors.videoIcon} flex-shrink-0`} />;
+      return <FilmIcon className={`w-5 h-5 ${isDark ? 'text-purple-400' : 'text-purple-500'} flex-shrink-0`} />;
     case 'text':
-      return <DocumentTextIcon className={`w-5 h-5 ${colors.textIcon} flex-shrink-0`} />;
+      return <DocumentTextIcon className={`w-5 h-5 ${isDark ? 'text-gray-400' : 'text-gray-500'} flex-shrink-0`} />;
     default:
-      return <DocumentIcon className={`w-5 h-5 ${colors.documentIcon} flex-shrink-0`} />;
+      return <DocumentIcon className={`w-5 h-5 ${isDark ? 'text-gray-500' : 'text-gray-400'} flex-shrink-0`} />;
   }
 };
 
 const TreeNode = ({ item, level = 0, onSelect, onToggle }: { item: TreeItem; level?: number; onSelect: (path: string) => void; onToggle: (path: string) => void }) => {
-  const { colors } = useTheme();
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
   const indent = level * 20;
 
   const handleClick = async (e: React.MouseEvent) => {
@@ -47,9 +49,16 @@ const TreeNode = ({ item, level = 0, onSelect, onToggle }: { item: TreeItem; lev
       onSelect(window.ipc.convertToSystemPath(item.path));
     } else if (item.type === 'image' || item.type === 'video') {
       try {
-        onSelect(window.ipc.convertToSystemPath(item.path));
+        const file = {
+          name: item.name,
+          path: window.ipc.convertToSystemPath(item.path),
+          type: item.type,
+          size: item.size || 0,
+          modifiedTime: item.modifiedTime || new Date()
+        };
+        await window.ipc.handleFileClick(file);
       } catch (error) {
-        console.error('Error opening file:', error);
+        console.error('Error handling file click:', error);
       }
     }
   };
@@ -62,27 +71,34 @@ const TreeNode = ({ item, level = 0, onSelect, onToggle }: { item: TreeItem; lev
   return (
     <div>
       <div
-        className={`flex items-center py-1.5 px-3 ${colors.backgroundHover} cursor-pointer transition-colors duration-200 rounded-lg mx-1 my-0.5 ${item.type === 'directory' ? 'font-medium' : 'font-normal'} ${colors.text}`}
+        className={`
+          flex items-center py-1.5 px-3 
+          ${isDark ? 'hover:bg-gray-700/50' : 'hover:bg-gray-50'}
+          cursor-pointer transition-colors duration-200
+          rounded-lg mx-1 my-0.5
+          ${item.type === 'directory' ? 'font-medium' : 'font-normal'}
+          ${isDark ? 'text-gray-200' : 'text-gray-700'}
+        `}
         style={{ paddingLeft: `${indent + 12}px` }}
         onClick={handleClick}
       >
         <div className="flex items-center flex-1 min-w-0 space-x-2">
           {item.type === 'directory' && (
             <div 
-              className={`p-0.5 -ml-1 ${colors.backgroundHover} rounded-sm cursor-pointer`}
+              className={`p-0.5 -ml-1 ${isDark ? 'hover:bg-gray-600' : 'hover:bg-gray-200'} rounded-sm cursor-pointer`}
               onClick={handleToggleClick}
             >
               {item.isExpanded ? (
-                <ChevronDownIcon className={`w-3.5 h-3.5 ${colors.icon}`} />
+                <ChevronDownIcon className={`w-3.5 h-3.5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
               ) : (
-                <ChevronRightIcon className={`w-3.5 h-3.5 ${colors.icon}`} />
+                <ChevronRightIcon className={`w-3.5 h-3.5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
               )}
             </div>
           )}
           <FileIcon type={item.type} />
-          <span className={`truncate text-sm ${colors.text}`}>{item.name}</span>
+          <span className={`truncate text-sm ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>{item.name}</span>
           {item.size && item.type !== 'directory' && (
-            <span className={`ml-auto text-xs ${colors.textSecondary} tabular-nums`}>
+            <span className={`ml-auto text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'} tabular-nums`}>
               {formatFileSize(item.size)}
             </span>
           )}

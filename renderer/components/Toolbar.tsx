@@ -47,17 +47,30 @@ const Toolbar: React.FC<ToolbarProps> = ({
   onToggleSidebar,
   onTogglePathBar
 }) => {
-  const { theme, toggleTheme, colors } = useTheme();
-
+  const { theme, toggleTheme } = useTheme();
+  const isDark = theme === 'dark';
+  console.log('theme',theme);
+  
   const buttonBaseClasses = "p-2 rounded-lg transition-all duration-200";
-  const buttonActiveClasses = `${colors.toolbarButtonActive} ${colors.toolbarButtonActiveHover}`;
-  const buttonInactiveClasses = `${colors.toolbarButtonInactive} ${colors.toolbarButtonInactiveHover}`;
-  const dividerClasses = `h-5 mx-1 border-l ${colors.toolbarDivider}`;
-  const searchInputClasses = `w-full pl-8 pr-8 py-1.5 text-sm rounded-lg focus:outline-none transition-colors duration-200 ${colors.toolbarInput} ${colors.toolbarInputBorder} ${colors.toolbarInputFocus} ${colors.toolbarInputPlaceholder}`;
+  const buttonActiveClasses = isDark 
+    ? "bg-gray-700 text-blue-400 hover:bg-gray-600" 
+    : "bg-gray-100 text-blue-600 hover:bg-gray-200";
+  const buttonInactiveClasses = isDark
+    ? "text-gray-400 hover:bg-gray-700 hover:text-gray-200"
+    : "text-gray-600 hover:bg-gray-100 hover:text-gray-900";
+  const dividerClasses = isDark
+    ? "h-5 mx-1 border-l border-gray-600"
+    : "h-5 mx-1 border-l border-gray-300";
+  const searchInputClasses = `w-full pl-8 pr-8 py-1.5 text-sm rounded-lg focus:outline-none transition-colors duration-200 ${
+    isDark 
+      ? "border-gray-600 focus:border-blue-400 bg-gray-700 text-gray-100 placeholder-gray-500" 
+      : "border-gray-300 focus:border-blue-500 bg-white text-gray-900 placeholder-gray-400"
+  }`;
 
   return (
-    <div className={`flex items-center p-2 border-b select-none ${colors.toolbarBackground} ${colors.toolbarBorder}`} 
-      style={{ WebkitAppRegion: 'drag' } as any}>
+    <div className={`flex items-center p-2 border-b select-none ${
+      isDark ? "border-gray-700 bg-gray-900" : "border-gray-200 bg-white"
+    }`} style={{ WebkitAppRegion: 'drag' } as any}>
       {/* 左侧导航按钮组 */}
       <div className="flex items-center space-x-1" style={{ WebkitAppRegion: 'no-drag'} as any}>
         <button
@@ -94,7 +107,9 @@ const Toolbar: React.FC<ToolbarProps> = ({
       <div className="flex items-center space-x-2" style={{ WebkitAppRegion: 'no-drag' } as any}>
         {/* 搜索框 */}
         <div className="relative w-64">
-          <MagnifyingGlassIcon className={`w-4 h-4 absolute left-2 top-1/2 transform -translate-y-1/2 ${colors.toolbarSearchIcon}`} />
+          <MagnifyingGlassIcon className={`w-4 h-4 absolute left-2 top-1/2 transform -translate-y-1/2 ${
+            isDark ? "text-gray-500" : "text-gray-400"
+          }`} />
           <input
             type="text"
             value={searchQuery}
@@ -105,7 +120,11 @@ const Toolbar: React.FC<ToolbarProps> = ({
           {searchQuery && (
             <button
               onClick={() => onSearchChange('')}
-              className={`absolute right-2 top-1/2 transform -translate-y-1/2 ${colors.toolbarSearchIcon} ${colors.toolbarSearchIconHover}`}
+              className={`absolute right-2 top-1/2 transform -translate-y-1/2 ${
+                isDark 
+                  ? "text-gray-500 hover:text-gray-300" 
+                  : "text-gray-400 hover:text-gray-600"
+              }`}
             >
               <XMarkIcon className="w-4 h-4" />
             </button>
@@ -133,9 +152,9 @@ const Toolbar: React.FC<ToolbarProps> = ({
         <button
           onClick={toggleTheme}
           className={`${buttonBaseClasses} ${buttonInactiveClasses}`}
-          title={theme === 'dark' ? "切换到亮色模式" : "切换到暗色模式"}
+          title={isDark ? "切换到亮色模式" : "切换到暗色模式"}
         >
-          {theme === 'dark' ? (
+          {isDark ? (
             <SunIcon className="w-5 h-5" />
           ) : (
             <MoonIcon className="w-5 h-5" />
@@ -162,7 +181,11 @@ const Toolbar: React.FC<ToolbarProps> = ({
           </button>
           <button
             onClick={() => window.electron.close()}
-            className={`${buttonBaseClasses} ${colors.toolbarCloseButton} ${colors.toolbarCloseButtonHover}`}
+            className={`${buttonBaseClasses} ${
+              isDark 
+                ? "text-gray-400 hover:bg-red-600/90 hover:text-white" 
+                : "text-gray-600 hover:bg-red-500 hover:text-white"
+            }`}
             title="关闭"
           >
             <XCircleIcon className="w-4 h-4" />
