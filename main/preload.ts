@@ -11,7 +11,6 @@ interface FileAPI {
   openInExplorer(path: string): Promise<void>;
   convertToAppPath(path: string): string;
   convertToSystemPath(path: string): string;
-  getDrives(): Promise<string[]>;
 }
 
 const handler: FileAPI = {
@@ -46,9 +45,6 @@ const handler: FileAPI = {
   convertToSystemPath(appPath: string) {
     // 使用 path.sep 获取当前系统的路径分隔符
     return appPath.replace(/>/g, path.sep);
-  },
-  async getDrives() {
-    return ipcRenderer.invoke('get-drives');
   }
 };
 
