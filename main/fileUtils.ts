@@ -27,13 +27,28 @@ export async function scanDirectory(dirPath: string): Promise<MediaFile[]> {
   const mediaFiles: MediaFile[] = [];
 
   try {
-    const entries = await fs.promises.readdir(dirPath, { withFileTypes: true });
+    // 规范化路径
+    const normalizedPath = path.normalize(dirPath);
+    console.log('Scanning directory:', normalizedPath);
+
+    // 确保路径存在且可访问
+    try {
+      await fs.promises.access(normalizedPath, fs.constants.R_OK);
+    } catch (error) {
+      console.error(`Directory not accessible: ${normalizedPath}`, error);
+      throw new Error(`Directory not accessible: ${normalizedPath}`);
+    }
+
+    // 读取目录内容
+    const entries = await fs.promises.readdir(normalizedPath, { withFileTypes: true });
+    console.log(`Found ${entries.length} entries in ${normalizedPath}`);
 
     for (const entry of entries) {
       try {
-        const fullPath = path.join(dirPath, entry.name);
+        const fullPath = path.join(normalizedPath, entry.name);
         const stats = await fs.promises.stat(fullPath);
 
+        // 对于目录，直接添加
         if (entry.isDirectory()) {
           mediaFiles.push({
             path: fullPath,
@@ -42,33 +57,37 @@ export async function scanDirectory(dirPath: string): Promise<MediaFile[]> {
             size: 0,
             modifiedTime: stats.mtime
           });
-        } else {
-          const type = getFileType(fullPath);
-          if (type) {
-            mediaFiles.push({
-              path: fullPath,
-              type,
-              name: entry.name,
-              size: stats.size,
-              modifiedTime: stats.mtime
-            });
-          }
+          continue;
+        }
+
+        // 对于文件，检查是否是支持的类型
+        const type = getFileType(fullPath);
+        if (type) {
+          mediaFiles.push({
+            path: fullPath,
+            type,
+            name: entry.name,
+            size: stats.size,
+            modifiedTime: stats.mtime
+          });
         }
       } catch (error) {
         // 跳过无法访问的文件或目录
-        console.warn(`无法访问文件或目录: ${entry.name}`, error);
+        console.warn(`Cannot access file or directory: ${entry.name}`, error);
         continue;
       }
     }
   } catch (error) {
-    console.error(`无法读取目录: ${dirPath}`, error);
-    throw error; // 如果整个目录都无法读取，则抛出错误
+    console.error(`Cannot read directory: ${dirPath}`, error);
+    throw error;
   }
 
+  // 按类型和名称排序
   return mediaFiles.sort((a, b) => {
-    // 文件夹排在前面
+    // 目录排在前面
     if (a.type === 'directory' && b.type !== 'directory') return -1;
     if (a.type !== 'directory' && b.type === 'directory') return 1;
+    // 同类型按名称排序
     return a.name.localeCompare(b.name);
   });
 }
