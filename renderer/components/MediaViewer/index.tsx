@@ -51,17 +51,18 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
 
   useEffect(() => {
     if (layoutMode === 'vertical') {
-      // 创建 Intersection Observer
       observerRef.current = new IntersectionObserver(
         (entries) => {
           const visibleEntries = entries.filter(entry => entry.isIntersecting);
           if (visibleEntries.length > 0) {
-            // 找到最上面的可见元素
             const firstVisible = visibleEntries.reduce((prev, current) => {
               return prev.boundingClientRect.top < current.boundingClientRect.top ? prev : current;
             });
             const index = parseInt(firstVisible.target.getAttribute('data-index') || '0');
-            setCurrentIndex(index);
+            // 只在用户滚动时更新索引，而不是布局切换时
+            if (Math.abs(index - currentIndex) === 1) {
+              setCurrentIndex(index);
+            }
           }
         },
         {
@@ -83,7 +84,20 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
         }
       };
     }
-  }, [layoutMode, files]);
+  }, [layoutMode, files, currentIndex]);
+
+  useEffect(() => {
+    // 给一个小延时确保DOM已更新
+    const timer = setTimeout(() => {
+      if (layoutMode === 'vertical' && containerRef.current && mediaRefs.current.get(currentIndex)) {
+        const element = mediaRefs.current.get(currentIndex);
+        if (element) {
+          element.scrollIntoView({ behavior: 'auto', block: 'start' });
+        }
+      }
+    }, 50);
+    return () => clearTimeout(timer);
+  }, [layoutMode, currentIndex]);
 
   useEffect(() => {
     if (layoutMode === 'vertical' && containerRef.current && currentItemRef.current) {
@@ -91,21 +105,9 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
     }
   }, [currentIndex, layoutMode]);
 
-  // Reset scale when changing images or layout mode
   useEffect(() => {
     setScale(1);
   }, [currentIndex, layoutMode]);
-
-  const handleWheel = useCallback((e: React.WheelEvent) => {
-    if (layoutMode === 'horizontal') {
-      e.preventDefault();
-      const delta = e.deltaY * -0.01;
-      setScale(prevScale => {
-        const newScale = Math.min(Math.max(0.1, prevScale + delta), 5);
-        return newScale;
-      });
-    }
-  }, [layoutMode]);
 
   const handlePrevious = () => {
     setCurrentIndex((prev) => (prev > 0 ? prev - 1 : files.length - 1));
@@ -127,6 +129,27 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
     }
   }, []);
 
+  if (files.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-full text-text-secondary">
+        没有找到媒体文件
+      </div>
+    );
+  }
+
+  const currentFile = files[currentIndex];
+
+  const handleWheel = useCallback((e: React.WheelEvent) => {
+    // if (layoutMode === 'horizontal' && currentFile.type === 'image') {
+    //   e.preventDefault();
+    //   const delta = e.deltaY * -0.01;
+    //   setScale(prevScale => {
+    //     const newScale = Math.min(Math.max(0.1, prevScale + delta), 5);
+    //     return newScale;
+    //   });
+    // }
+  }, [layoutMode, currentFile]);
+
   const handleZoomIn = useCallback(() => {
     if (layoutMode === 'horizontal') {
       setScale(prevScale => Math.min(prevScale + 0.2, 5));
@@ -144,19 +167,8 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
   }, []);
 
   const handleFitToScreen = useCallback(() => {
-    // 这里可以根据实际需求调整适应屏幕的缩放比例
     setScale(1);
   }, []);
-
-  if (files.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-full text-text-secondary">
-        没有找到媒体文件
-      </div>
-    );
-  }
-
-  const currentFile = files[currentIndex];
 
   const renderMediaItem = (file: MediaFile, index: number) => {
     const isActive = index === currentIndex;
@@ -173,7 +185,7 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
         data-index={index}
         className={`${styles.media_container} ${isActive ? styles.active : ''}`}
         onClick={() => setCurrentIndex(index)}
-        onWheel={isActive && isImage ? handleWheel : undefined}
+        // onWheel={layoutMode === 'horizontal' && isActive && isImage ? handleWheel : undefined}
       >
         {isImage ? (
           <img
@@ -239,6 +251,7 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
           </button>
         </>
       )}
+       {/* 底部工具栏 */}
       {layoutMode === 'horizontal' ? (
         <div className={styles.horizontal_container}>
           {renderMediaItem(currentFile, currentIndex)}
@@ -270,11 +283,6 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
           {files.map((file, index) => renderMediaItem(file, index))}
         </div>
       )}
-      <div className={styles.controls}>
-        <button onClick={handlePrevious}>上一张</button>
-        <button onClick={toggleLayout}>切换布局</button>
-        <button onClick={handleNext}>下一张</button>
-      </div>
     </div>
   );
 };
