@@ -28,8 +28,12 @@ export const useFileOperations = () => {
 
   const handleDirectoryClick = async (path: string) => {
     try {
-      const appPath = window.ipc.convertToAppPath(path);
-      const mediaFiles = await window.ipc.scanDirectory(path);
+      // 检查是否是驱动器根目录（例如 "D:"）
+      const isDriveRoot = /^[A-Z]:$/.test(path);
+      const systemPath = isDriveRoot ? path + '\\' : path;
+      const appPath = window.ipc.convertToAppPath(systemPath);
+      
+      const mediaFiles = await window.ipc.scanDirectory(systemPath);
       setFiles(mediaFiles);
       setCurrentPath(appPath);
       setSelectedFileIndex(0);
@@ -73,12 +77,20 @@ export const useFileOperations = () => {
     if (file.type === 'image' || file.type === 'video') {
       try {
         // 获取文件所在目录的路径
-        const dirPath = file.path.substring(0, file.path.lastIndexOf('\\'));
-        const appDirPath = window.ipc.convertToAppPath(dirPath);
+        const filePath = file.path;
+        const lastBackslashIndex = filePath.lastIndexOf('\\');
+        // 检查是否是驱动器根目录下的文件
+        const isDriveRootFile = lastBackslashIndex === 2; // 例如 "D:\file.jpg"
+        const dirPath = isDriveRootFile 
+          ? filePath.substring(0, 2) // 取驱动器部分，如 "D:"
+          : filePath.substring(0, lastBackslashIndex); // 取完整目录路径
+        
+        const systemPath = isDriveRootFile ? dirPath + '\\' : dirPath;
+        const appDirPath = window.ipc.convertToAppPath(systemPath);
         
         // 如果不在当前目录，先切换到文件所在目录
         if (appDirPath !== currentPath) {
-          const mediaFiles = await window.ipc.scanDirectory(dirPath);
+          const mediaFiles = await window.ipc.scanDirectory(systemPath);
           setFiles(mediaFiles);
           setCurrentPath(appDirPath);
           
@@ -103,15 +115,6 @@ export const useFileOperations = () => {
       }
     }
   };
-
-  useEffect(() => {
-    const cleanup = window.ipc.on('file-clicked', (file: any) => {
-      console.log('File clicked:', file);
-      handleFileClick(file as MediaFile);
-    });
-
-    return cleanup;
-  }, [currentPath, files]);
 
   const handlePathSegmentClick = async (index: number) => {
     const pathParts = currentPath.split('>').filter(Boolean);
@@ -175,6 +178,15 @@ export const useFileOperations = () => {
 
     return cleanup;
   }, []);
+
+  useEffect(() => {
+    const cleanup = window.ipc.on('file-clicked', (file: any) => {
+      console.log('File clicked:', file);
+      handleFileClick(file as MediaFile);
+    });
+
+    return cleanup;
+  }, [currentPath, files]);
 
   return {
     // 状态

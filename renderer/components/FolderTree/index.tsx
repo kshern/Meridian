@@ -122,7 +122,7 @@ const FolderTree: React.FC<FolderTreeProps> = ({ onSelect }) => {
       const drives = await window.ipc.getDrives();
       return drives.map(drive => ({
         name: drive,
-        path: window.ipc.convertToAppPath(drive + '\\'),
+        path: drive,  
         type: 'directory',
         isExpanded: false,
         children: []
