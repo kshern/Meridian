@@ -24,6 +24,8 @@ interface FileAPI {
   getSidebarWidth(): Promise<number>;
   savePathBarVisible(visible: boolean): Promise<void>;
   getPathBarVisible(): Promise<boolean>;
+  getTheme(): Promise<string>;
+  saveTheme(theme: string): Promise<void>;
 }
 
 interface ElectronAPI {
@@ -88,6 +90,12 @@ const handler: FileAPI = {
   },
   async getPathBarVisible() {
     return ipcRenderer.invoke('get-pathbar-visible');
+  },
+  async getTheme() {
+    return ipcRenderer.invoke('getTheme');
+  },
+  async saveTheme(theme: string) {
+    return ipcRenderer.invoke('saveTheme', theme);
   }
 };
 

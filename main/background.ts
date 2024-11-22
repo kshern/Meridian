@@ -4,6 +4,17 @@ import serve from 'electron-serve'
 import { createWindow } from './helpers'
 import { scanDirectory, getFileContent, MediaFile } from './fileUtils'
 import * as fs from 'fs'
+import Store from 'electron-store'
+
+// 初始化 electron-store
+const store = new Store({
+  name: 'freader-settings',
+  defaults: {
+    theme: null,
+    sidebarWidth: 280,
+    pathBarVisible: true
+  }
+});
 
 // 设置日志输出
 const log = {
@@ -108,57 +119,67 @@ const registerIpcHandlers = () => {
     }
   });
 
-  // 获取配置文件路径
-  const getConfigPath = () => {
-    return path.join(app.getPath('userData'), 'config.json');
-  };
-
-  // 读取配置
-  const readConfig = () => {
-    const configPath = getConfigPath();
-    try {
-      if (fs.existsSync(configPath)) {
-        const data = fs.readFileSync(configPath, 'utf8');
-        return JSON.parse(data);
-      }
-    } catch (error) {
-      console.error('Error reading config:', error);
-    }
-    return {};
-  };
-
-  // 保存配置
-  const saveConfig = (config: any) => {
-    const configPath = getConfigPath();
-    try {
-      fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
-    } catch (error) {
-      console.error('Error saving config:', error);
-    }
-  };
-
-  // 添加 IPC 处理器
+  // 保存侧边栏宽度
   ipcMain.handle('save-sidebar-width', async (_, width: number) => {
-    const config = readConfig();
-    config.sidebarWidth = width;
-    saveConfig(config);
+    try {
+      store.set('sidebarWidth', width);
+      return true;
+    } catch (error) {
+      log.error('Error saving sidebar width:', error);
+      throw error;
+    }
   });
 
+  // 获取侧边栏宽度
   ipcMain.handle('get-sidebar-width', async () => {
-    const config = readConfig();
-    return config.sidebarWidth || 280; // 默认宽度
+    try {
+      return store.get('sidebarWidth', 280);
+    } catch (error) {
+      log.error('Error getting sidebar width:', error);
+      throw error;
+    }
   });
 
+  // 保存地址栏显示状态
   ipcMain.handle('save-pathbar-visible', async (_, visible: boolean) => {
-    const config = readConfig();
-    config.pathBarVisible = visible;
-    saveConfig(config);
+    try {
+      store.set('pathBarVisible', visible);
+      return true;
+    } catch (error) {
+      log.error('Error saving path bar state:', error);
+      throw error;
+    }
   });
 
+  // 获取地址栏显示状态
   ipcMain.handle('get-pathbar-visible', async () => {
-    const config = readConfig();
-    // 默认显示地址栏
-    return config.pathBarVisible === undefined ? true : config.pathBarVisible;
+    try {
+      return store.get('pathBarVisible', true);
+    } catch (error) {
+      log.error('Error getting path bar state:', error);
+      return true; // 默认显示
+    }
+  });
+
+  // 保存主题设置
+  ipcMain.handle('getTheme', async () => {
+    try {
+      return store.get('theme', null);
+    } catch (error) {
+      log.error('Error getting theme:', error);
+      throw error;
+    }
+  });
+
+  // 获取主题设置
+  ipcMain.handle('saveTheme', async (_, theme: string) => {
+    try {
+      store.set('theme', theme);
+      return true;
+    } catch (error) {
+      log.error('Error saving theme:', error);
+      throw error;
+    }
   });
 
   // 处理窗口最小化
