@@ -175,8 +175,11 @@
       max-width: 100%;
       max-height: 100%;
       object-fit: contain;
-      transition: transform 0.3s ease;
       transform-origin: center center;
+
+      &.rotating {
+        transition: transform 0.3s ease;
+      }
 
       &.dragging {
         transition: none;

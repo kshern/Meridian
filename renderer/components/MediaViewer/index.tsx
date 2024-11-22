@@ -9,6 +9,10 @@ import {
   MinusIcon,
   PlusIcon,
   PlusCircleIcon,
+  ViewColumnsIcon,
+  Squares2X2Icon,
+  ArrowsRightLeftIcon,
+  ArrowsUpDownIcon,
 } from '@heroicons/react/24/outline';
 import styles from './index.module.scss';
 
@@ -247,26 +251,15 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
         {currentIndex + 1} / {files.length}
       </div>
       <div className={styles.controls}>
-        <button
-          className={styles.layout_toggle}
-          onClick={handleRotate}
-          data-tooltip="旋转"
-        >
-          <ArrowPathIcon className="w-5 h-5" />
-        </button>
-        <button
-          className={styles.layout_toggle}
-          onClick={toggleLayout}
-          data-tooltip={layoutMode === 'horizontal' ? '切换到垂直布局' : '切换到水平布局'}
-        >
-          {layoutMode === 'horizontal' ? (
-            <ArrowsPointingOutIcon className="w-5 h-5" />
-          ) : (
-            <ArrowsPointingInIcon className="w-5 h-5" />
-          )}
-        </button>
         {layoutMode === 'horizontal' && (
           <>
+          <button
+            className={styles.layout_toggle}
+            onClick={handleRotate}
+            data-tooltip="旋转"
+          >
+            <ArrowPathIcon className="w-5 h-5" />
+          </button>
             <button
               className={styles.layout_toggle}
               onClick={handleZoomOut}
@@ -294,15 +287,28 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
             </button>
           </>
         )}
-        
+        <button
+          className={styles.layout_toggle}
+          onClick={toggleLayout}
+          data-tooltip={layoutMode === 'horizontal' ? '切换到垂直布局' : '切换到水平布局'}
+        >
+          {layoutMode === 'horizontal' ? (
+            <ArrowsUpDownIcon className="w-5 h-5" />
+          ) : (
+            <ArrowsRightLeftIcon className="w-5 h-5" />
+          )}
+        </button>
       </div>
     </div>
   );
 
   const renderMediaItem = (file: MediaFile, index: number) => {
     const isImage = file.type === 'image';
-    const isVideo = file.type === 'video';
     const isCurrent = index === currentIndex;
+    const imageClasses = [
+      isDragging && 'dragging',
+      rotation !== 0 && 'rotating'
+    ].filter(Boolean).join(' ');
 
     const mediaStyle = layoutMode === 'horizontal' && isCurrent && isImage ? {
       transform: `scale(${scale}) translate(${position.x / scale}px, ${position.y / scale}px) rotate(${rotation}deg)`,
@@ -327,11 +333,11 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
             ref={isCurrent ? imageRef : null}
             src={`file://${file.path}`}
             alt={file.name}
-            className={styles.image}
+            className={imageClasses}
             style={mediaStyle}
             draggable={false}
           />
-        ) : isVideo ? (
+        ) : (
           <div className="w-full h-full flex items-center justify-center">
             <ReactPlayer
               url={`file://${file.path}`}
@@ -343,7 +349,7 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
               className={styles.react_player}
             />
           </div>
-        ) : null}
+        )}
       </div>
     );
   };
@@ -389,8 +395,8 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
   const currentFile = files[currentIndex];
 
   return (
-    <div 
-      ref={containerRef} 
+    <div
+      ref={containerRef}
       className={`${styles.media_viewer} ${styles.fade_in} ${styles[layoutMode]}`}
       onScroll={handleScroll}
     >
