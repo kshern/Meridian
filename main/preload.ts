@@ -2,6 +2,12 @@ import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
 import { MediaFile } from './fileUtils';
 import * as path from 'path';
 
+declare global {
+  interface Window {
+    ipc: FileAPI;
+  }
+}
+
 interface FileAPI {
   send(channel: string, value: unknown): void;
   on(channel: string, callback: (...args: unknown[]) => void): () => void;
@@ -12,6 +18,7 @@ interface FileAPI {
   convertToAppPath(path: string): string;
   convertToSystemPath(path: string): string;
   getDrives(): Promise<string[]>;
+  handleFileClick(file: MediaFile): Promise<void>;
 }
 
 const handler: FileAPI = {
@@ -49,6 +56,9 @@ const handler: FileAPI = {
   },
   async getDrives() {
     return ipcRenderer.invoke('get-drives');
+  },
+  async handleFileClick(file: MediaFile) {
+    return ipcRenderer.invoke('handle-file-click', file);
   }
 };
 

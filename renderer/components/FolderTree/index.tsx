@@ -34,9 +34,24 @@ const FileIcon = ({ type }: { type: string }) => {
 const TreeNode = ({ item, level = 0, onSelect, onToggle }: { item: TreeItem; level?: number; onSelect: (path: string) => void; onToggle: (path: string) => void }) => {
   const indent = level * 20;
 
-  const handleClick = (e: React.MouseEvent) => {
+  const handleClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    onSelect(window.ipc.convertToSystemPath(item.path));
+    if (item.type === 'directory') {
+      onSelect(window.ipc.convertToSystemPath(item.path));
+    } else if (item.type === 'image' || item.type === 'video') {
+      try {
+        const file = {
+          name: item.name,
+          path: window.ipc.convertToSystemPath(item.path),
+          type: item.type,
+          size: item.size || 0,
+          modifiedTime: item.modifiedTime || new Date()
+        };
+        await window.ipc.handleFileClick(file);
+      } catch (error) {
+        console.error('Error handling file click:', error);
+      }
+    }
   };
 
   const handleToggleClick = (e: React.MouseEvent) => {

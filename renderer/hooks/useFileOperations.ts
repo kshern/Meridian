@@ -80,6 +80,15 @@ export const useFileOperations = () => {
     }
   };
 
+  useEffect(() => {
+    const cleanup = window.ipc.on('file-clicked', (file: any) => {
+      console.log('File clicked:', file);
+      handleFileClick(file as MediaFile);
+    });
+
+    return cleanup;
+  }, [files]);
+
   const handlePathSegmentClick = async (index: number) => {
     const pathParts = currentPath.split('>').filter(Boolean);
     let targetPath;

@@ -63,7 +63,7 @@ const registerIpcHandlers = () => {
       return availableDrives.filter(drive => drive !== null);
     } catch (error) {
       log.error('Error getting drives:', error);
-      throw error;
+      throw error
     }
   });
 
@@ -93,6 +93,18 @@ const registerIpcHandlers = () => {
     } catch (error) {
       log.error('Error opening in explorer:', error);
       return false;
+    }
+  });
+
+  // 处理文件点击
+  ipcMain.handle('handle-file-click', async (_, file: MediaFile) => {
+    try {
+      if (mainWindow) {
+        mainWindow.webContents.send('file-clicked', file);
+      }
+    } catch (error) {
+      log.error('Error handling file click:', error);
+      throw error;
     }
   });
 }
