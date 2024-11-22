@@ -8,6 +8,7 @@ import {
   ArrowUturnLeftIcon,
   MinusIcon,
   PlusIcon,
+  PlusCircleIcon,
 } from '@heroicons/react/24/outline';
 import styles from './index.module.scss';
 
@@ -25,6 +26,8 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [rotation, setRotation] = useState(0);
+  const [isWidthFitted, setIsWidthFitted] = useState(false);
   const observerRef = useRef<IntersectionObserver | null>(null);
   const mediaRefs = useRef<Map<number, HTMLDivElement>>(new Map());
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -63,8 +66,8 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
               return prev.boundingClientRect.top < current.boundingClientRect.top ? prev : current;
             });
             const index = parseInt(firstVisible.target.getAttribute('data-index') || '0');
-            // 只在用户滚动时更新索引，而不是布局切换时
-            if (Math.abs(index - currentIndex) === 1) {
+            // 移除相邻限制，改为检查是否是有效的新索引
+            if (index >= 0 && index < files.length && index !== currentIndex) {
               setCurrentIndex(index);
             }
           }
@@ -111,7 +114,9 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
 
   useEffect(() => {
     setScale(1);
-    setPosition({ x: 0, y: 0 }); // 重置位置
+    setPosition({ x: 0, y: 0 });
+    setRotation(0); // 重置旋转角度
+    setIsWidthFitted(false); // 重置状态
   }, [currentIndex, layoutMode]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -145,7 +150,7 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
 
       // 计算最大可拖动范围
       const maxX = Math.max(0, (scaledWidth - containerRect.width) / 2);
-      const maxY = Math.max(0, (scaledHeight - containerRect.height) / 2);
+      const maxY = Math.max(0, (scaledHeight - containerRef.current!.getBoundingClientRect().height) / 2);
 
       // 限制水平拖动范围
       if (scaledWidth > containerRect.width) {
@@ -155,7 +160,7 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
       }
 
       // 限制垂直拖动范围
-      if (scaledHeight > containerRect.height) {
+      if (scaledHeight > containerRef.current!.getBoundingClientRect().height) {
         newY = Math.min(Math.max(newY, -maxY), maxY);
       } else {
         newY = 0;
@@ -198,26 +203,9 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
     }
   }, []);
 
-  if (files.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-full text-text-secondary">
-        没有找到媒体文件
-      </div>
-    );
-  }
-
-  const currentFile = files[currentIndex];
-
-  const handleWheel = useCallback((e: React.WheelEvent) => {
-    // if (layoutMode === 'horizontal' && currentFile.type === 'image') {
-    //   e.preventDefault();
-    //   const delta = e.deltaY * -0.01;
-    //   setScale(prevScale => {
-    //     const newScale = Math.min(Math.max(0.1, prevScale + delta), 5);
-    //     return newScale;
-    //   });
-    // }
-  }, [layoutMode, currentFile]);
+  const handleRotate = useCallback(() => {
+    setRotation(prev => (prev + 90) % 360);
+  }, []);
 
   const handleZoomIn = useCallback(() => {
     if (layoutMode === 'horizontal') {
@@ -231,13 +219,85 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
     }
   }, [layoutMode]);
 
-  const handleResetZoom = useCallback(() => {
-    setScale(1);
-  }, []);
-
   const handleFitToScreen = useCallback(() => {
     setScale(1);
   }, []);
+
+  const handleFitWidth = useCallback(() => {
+    if (!isWidthFitted) {
+      if (layoutMode === 'horizontal' && imageRef.current && containerRef.current) {
+        const imgRect = imageRef.current.getBoundingClientRect();
+        const containerRect = containerRef.current.getBoundingClientRect();
+        const currentWidth = imgRect.width / scale;
+        const newScale = containerRect.width / currentWidth;
+        setScale(newScale);
+        setPosition({ x: 0, y: 0 });
+        setIsWidthFitted(true);
+      }
+    } else {
+      setScale(1);
+      setPosition({ x: 0, y: 0 });
+      setIsWidthFitted(false);
+    }
+  }, [layoutMode, scale, isWidthFitted]);
+
+  const renderToolbar = () => (
+    <div className={styles.toolbar}>
+      <div className={styles.file_counter}>
+        {currentIndex + 1} / {files.length}
+      </div>
+      <div className={styles.controls}>
+        <button
+          className={styles.layout_toggle}
+          onClick={handleRotate}
+          data-tooltip="旋转"
+        >
+          <ArrowPathIcon className="w-5 h-5" />
+        </button>
+        <button
+          className={styles.layout_toggle}
+          onClick={toggleLayout}
+          data-tooltip={layoutMode === 'horizontal' ? '切换到垂直布局' : '切换到水平布局'}
+        >
+          {layoutMode === 'horizontal' ? (
+            <ArrowsPointingOutIcon className="w-5 h-5" />
+          ) : (
+            <ArrowsPointingInIcon className="w-5 h-5" />
+          )}
+        </button>
+        {layoutMode === 'horizontal' && (
+          <>
+            <button
+              className={styles.layout_toggle}
+              onClick={handleZoomOut}
+              data-tooltip="缩小"
+            >
+              <MinusIcon className="w-5 h-5" />
+            </button>
+            <button
+              className={styles.layout_toggle}
+              onClick={handleZoomIn}
+              data-tooltip="放大"
+            >
+              <PlusIcon className="w-5 h-5" />
+            </button>
+            <button
+              className={styles.layout_toggle}
+              onClick={handleFitWidth}
+              data-tooltip={isWidthFitted ? "重置" : "横向铺满"}
+            >
+              {isWidthFitted ? (
+                <ArrowsPointingInIcon className="w-5 h-5" />
+              ) : (
+                <ArrowsPointingOutIcon className="w-5 h-5 rotate-90" />
+              )}
+            </button>
+          </>
+        )}
+        
+      </div>
+    </div>
+  );
 
   const renderMediaItem = (file: MediaFile, index: number) => {
     const isImage = file.type === 'image';
@@ -245,7 +305,7 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
     const isCurrent = index === currentIndex;
 
     const mediaStyle = layoutMode === 'horizontal' && isCurrent && isImage ? {
-      transform: `scale(${scale}) translate(${position.x / scale}px, ${position.y / scale}px)`,
+      transform: `scale(${scale}) translate(${position.x / scale}px, ${position.y / scale}px) rotate(${rotation}deg)`,
       cursor: isDragging ? 'grabbing' : (scale > 1 ? 'grab' : 'default'),
     } : undefined;
 
@@ -288,31 +348,55 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
     );
   };
 
+  const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+    if (layoutMode === 'vertical') {
+      const container = e.currentTarget;
+      const items = Array.from(mediaRefs.current.values());
+      const containerRect = container.getBoundingClientRect();
+
+      // 找到最接近容器中心的元素
+      let closestItem = null;
+      let minDistance = Infinity;
+      let closestIndex = currentIndex;
+
+      items.forEach((item, index) => {
+        const itemRect = item.getBoundingClientRect();
+        const itemCenter = itemRect.top + itemRect.height / 2;
+        const containerCenter = containerRect.top + containerRect.height / 2;
+        const distance = Math.abs(itemCenter - containerCenter);
+
+        if (distance < minDistance) {
+          minDistance = distance;
+          closestItem = item;
+          closestIndex = parseInt(item.getAttribute('data-index') || '0');
+        }
+      });
+
+      if (closestIndex !== currentIndex) {
+        setCurrentIndex(closestIndex);
+      }
+    }
+  }, [layoutMode, currentIndex]);
+
+  if (files.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-full text-text-secondary">
+        没有找到媒体文件
+      </div>
+    );
+  }
+
+  const currentFile = files[currentIndex];
+
   return (
     <div 
       ref={containerRef} 
       className={`${styles.media_viewer} ${styles.fade_in} ${styles[layoutMode]}`}
+      onScroll={handleScroll}
     >
-            {/* 顶部工具栏 */}
-            <div className={styles.toolbar}>
-        <div className={styles.file_counter}>
-          {currentIndex + 1} / {files.length}
-        </div>
-        <div className={styles.controls}>
-          <button
-            className={styles.layout_toggle}
-            onClick={toggleLayout}
-            data-tooltip={layoutMode === 'horizontal' ? '切换到垂直布局' : '切换到水平布局'}
-          >
-            {layoutMode === 'horizontal' ? '⇅' : '⇄'}
-          </button>
-          <div className={styles.filename}>
-            {currentFile.name}
-          </div>
-        </div>
-      </div>
-            {/* 水平布局的导航按钮 */}
-            {layoutMode === 'horizontal' && (
+      {renderToolbar()}
+      {/* 水平布局的导航按钮 */}
+      {layoutMode === 'horizontal' && (
         <>
           <button
             onClick={handlePrevious}
@@ -328,11 +412,11 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
           </button>
         </>
       )}
-       {/* 底部工具栏 */}
+      {/* 底部工具栏 */}
       {layoutMode === 'horizontal' ? (
         <div className={styles.horizontal_container}>
           {renderMediaItem(currentFile, currentIndex)}
-          <div className={styles.bottom_toolbar}>
+          {/* <div className={styles.bottom_toolbar}>
             <button onClick={handleZoomOut} title="缩小">
               <MinusIcon />
               缩小
@@ -340,10 +424,6 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
             <button onClick={handleZoomIn} title="放大">
               <PlusIcon />
               放大
-            </button>
-            <button onClick={handleResetZoom} title="重置缩放">
-              <ArrowPathIcon />
-              重置
             </button>
             <button onClick={handleFitToScreen} title="适应屏幕">
               <ArrowsPointingInIcon />
@@ -353,7 +433,7 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
               <ArrowsPointingOutIcon />
               200%
             </button>
-          </div>
+          </div> */}
         </div>
       ) : (
         <div className={styles.vertical_container}>
