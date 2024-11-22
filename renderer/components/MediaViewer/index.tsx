@@ -1,6 +1,14 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import ReactPlayer from 'react-player';
 import { MediaFile } from '../../../main/fileUtils';
+import {
+  ArrowPathIcon,
+  ArrowsPointingInIcon,
+  ArrowsPointingOutIcon,
+  ArrowUturnLeftIcon,
+  MinusIcon,
+  PlusIcon,
+} from '@heroicons/react/24/outline';
 import styles from './index.module.scss';
 
 interface MediaViewerProps {
@@ -13,6 +21,7 @@ type LayoutMode = 'horizontal' | 'vertical';
 const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) => {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [layoutMode, setLayoutMode] = useState<LayoutMode>('horizontal');
+  const [scale, setScale] = useState(1);
   const observerRef = useRef<IntersectionObserver | null>(null);
   const mediaRefs = useRef<Map<number, HTMLDivElement>>(new Map());
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -58,11 +67,10 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
         {
           root: null,
           rootMargin: '0px',
-          threshold: 0.5, // 当元素50%可见时触发
+          threshold: 0.5,
         }
       );
 
-      // 观察所有媒体容器
       mediaRefs.current.forEach((element) => {
         if (observerRef.current) {
           observerRef.current.observe(element);
@@ -83,6 +91,22 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
     }
   }, [currentIndex, layoutMode]);
 
+  // Reset scale when changing images or layout mode
+  useEffect(() => {
+    setScale(1);
+  }, [currentIndex, layoutMode]);
+
+  const handleWheel = useCallback((e: React.WheelEvent) => {
+    if (layoutMode === 'horizontal') {
+      e.preventDefault();
+      const delta = e.deltaY * -0.01;
+      setScale(prevScale => {
+        const newScale = Math.min(Math.max(0.1, prevScale + delta), 5);
+        return newScale;
+      });
+    }
+  }, [layoutMode]);
+
   const handlePrevious = () => {
     setCurrentIndex((prev) => (prev > 0 ? prev - 1 : files.length - 1));
   };
@@ -95,13 +119,33 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
     setLayoutMode(prev => prev === 'horizontal' ? 'vertical' : 'horizontal');
   };
 
-  // 保存媒体容器的引用
   const setMediaRef = useCallback((element: HTMLDivElement | null, index: number) => {
     if (element) {
       mediaRefs.current.set(index, element);
     } else {
       mediaRefs.current.delete(index);
     }
+  }, []);
+
+  const handleZoomIn = useCallback(() => {
+    if (layoutMode === 'horizontal') {
+      setScale(prevScale => Math.min(prevScale + 0.2, 5));
+    }
+  }, [layoutMode]);
+
+  const handleZoomOut = useCallback(() => {
+    if (layoutMode === 'horizontal') {
+      setScale(prevScale => Math.max(prevScale - 0.2, 0.1));
+    }
+  }, [layoutMode]);
+
+  const handleResetZoom = useCallback(() => {
+    setScale(1);
+  }, []);
+
+  const handleFitToScreen = useCallback(() => {
+    // 这里可以根据实际需求调整适应屏幕的缩放比例
+    setScale(1);
   }, []);
 
   if (files.length === 0) {
@@ -116,6 +160,12 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
 
   const renderMediaItem = (file: MediaFile, index: number) => {
     const isActive = index === currentIndex;
+    const isImage = file.type === 'image';
+    const imageStyle = layoutMode === 'horizontal' && isImage ? {
+      transform: `scale(${scale})`,
+      transition: 'transform 0.1s ease-out'
+    } : undefined;
+
     return (
       <div 
         key={file.path}
@@ -123,12 +173,14 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
         data-index={index}
         className={`${styles.media_container} ${isActive ? styles.active : ''}`}
         onClick={() => setCurrentIndex(index)}
+        onWheel={isActive && isImage ? handleWheel : undefined}
       >
-        {file.type === 'image' ? (
+        {isImage ? (
           <img
             src={`file://${file.path}`}
             alt={file.name}
             draggable={false}
+            style={imageStyle}
           />
         ) : file.type === 'video' ? (
           <div className="w-full h-full flex items-center justify-center">
@@ -148,9 +200,12 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
   };
 
   return (
-    <div className={`${styles.media_viewer} ${styles.fade_in} ${styles[layoutMode]}`}>
-      {/* 顶部工具栏 */}
-      <div className={styles.toolbar}>
+    <div 
+      ref={containerRef} 
+      className={`${styles.media_viewer} ${styles.fade_in} ${styles[layoutMode]}`}
+    >
+            {/* 顶部工具栏 */}
+            <div className={styles.toolbar}>
         <div className={styles.file_counter}>
           {currentIndex + 1} / {files.length}
         </div>
@@ -167,9 +222,8 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
           </div>
         </div>
       </div>
-
-      {/* 水平布局的导航按钮 */}
-      {layoutMode === 'horizontal' && (
+            {/* 水平布局的导航按钮 */}
+            {layoutMode === 'horizontal' && (
         <>
           <button
             onClick={handlePrevious}
@@ -185,24 +239,41 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
           </button>
         </>
       )}
-
-      {/* 媒体内容 */}
-      <div className={`${styles.content} flex ${layoutMode === 'vertical' ? 'flex-col' : ''} h-full p-8`}>
-        {layoutMode === 'vertical' ? (
-          <div className={`${styles.wrapper}`} ref={containerRef}>
-            {files.map((file, index) => (
-              <div
-                key={file.path}
-                ref={index === currentIndex ? currentItemRef : null}
-                className={styles.media_container}
-              >
-                {renderMediaItem(file, index)}
-              </div>
-            ))}
+      {layoutMode === 'horizontal' ? (
+        <div className={styles.horizontal_container}>
+          {renderMediaItem(currentFile, currentIndex)}
+          <div className={styles.bottom_toolbar}>
+            <button onClick={handleZoomOut} title="缩小">
+              <MinusIcon />
+              缩小
+            </button>
+            <button onClick={handleZoomIn} title="放大">
+              <PlusIcon />
+              放大
+            </button>
+            <button onClick={handleResetZoom} title="重置缩放">
+              <ArrowPathIcon />
+              重置
+            </button>
+            <button onClick={handleFitToScreen} title="适应屏幕">
+              <ArrowsPointingInIcon />
+              适应
+            </button>
+            <button onClick={() => setScale(2)} title="200%">
+              <ArrowsPointingOutIcon />
+              200%
+            </button>
           </div>
-        ) : (
-          renderMediaItem(currentFile, currentIndex)
-        )}
+        </div>
+      ) : (
+        <div className={styles.vertical_container}>
+          {files.map((file, index) => renderMediaItem(file, index))}
+        </div>
+      )}
+      <div className={styles.controls}>
+        <button onClick={handlePrevious}>上一张</button>
+        <button onClick={toggleLayout}>切换布局</button>
+        <button onClick={handleNext}>下一张</button>
       </div>
     </div>
   );

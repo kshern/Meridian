@@ -26,6 +26,7 @@ interface FileAPI {
   getPathBarVisible(): Promise<boolean>;
   getTheme(): Promise<string>;
   saveTheme(theme: string): Promise<void>;
+  getVideoThumbnail(path: string): Promise<string>;
 }
 
 interface ElectronAPI {
@@ -38,6 +39,9 @@ interface ElectronAPI {
   minimize(): Promise<void>;
   maximize(): Promise<void>;
   close(): Promise<void>;
+  ipcRenderer: {
+    invoke(channel: string, ...args: any[]): Promise<any>;
+  };
 }
 
 const handler: FileAPI = {
@@ -96,6 +100,9 @@ const handler: FileAPI = {
   },
   async saveTheme(theme: string) {
     return ipcRenderer.invoke('saveTheme', theme);
+  },
+  async getVideoThumbnail(path: string) {
+    return ipcRenderer.invoke('get-video-thumbnail', path);
   }
 };
 
@@ -108,7 +115,10 @@ const electronHandler: ElectronAPI = {
   handleFileClick: (file: any) => ipcRenderer.invoke('handle-file-click', file),
   minimize: () => ipcRenderer.invoke('minimize-window'),
   maximize: () => ipcRenderer.invoke('maximize-window'),
-  close: () => ipcRenderer.invoke('close-window')
+  close: () => ipcRenderer.invoke('close-window'),
+  ipcRenderer: {
+    invoke: (channel: string, ...args: any[]) => ipcRenderer.invoke(channel, ...args),
+  },
 };
 
 contextBridge.exposeInMainWorld('ipc', handler);

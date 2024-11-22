@@ -123,7 +123,6 @@ function Home() {
                 viewType={viewType}
                 onFileClick={handleFileClick}
                 onDirectoryClick={handleDirectoryClick}
-                theme={theme}
               />
             ) : (
               <MediaViewer

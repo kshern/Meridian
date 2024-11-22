@@ -5,6 +5,7 @@ import { createWindow } from './helpers'
 import { scanDirectory, getFileContent, MediaFile } from './fileUtils'
 import * as fs from 'fs'
 import Store from 'electron-store'
+import { generateVideoThumbnail } from './videoUtils';
 
 // 初始化 electron-store
 const store = new Store({
@@ -199,6 +200,17 @@ const registerIpcHandlers = () => {
   // 处理窗口关闭
   ipcMain.handle('close-window', () => {
     mainWindow.close();
+  });
+
+  // 处理视频缩略图生成
+  ipcMain.handle('get-video-thumbnail', async (_, videoPath: string) => {
+    try {
+      const thumbnailPath = await generateVideoThumbnail(videoPath);
+      return thumbnailPath;
+    } catch (error) {
+      console.error('Error generating video thumbnail:', error);
+      return null;
+    }
   });
 }
 
