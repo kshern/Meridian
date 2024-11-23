@@ -101,6 +101,9 @@ const TreeNode = ({ item, level = 0, onSelect, onToggle, showMediaOnly, currentP
         `}
         style={{ paddingLeft: `${indent + 12}px` }}
         onClick={handleClick}
+        title={item.type === 'directory' 
+          ? item.name
+          : `${item.name}${item.size ? '\n' + formatFileSize(item.size) : ''}`}
       >
         <div className="flex items-center flex-1 min-w-0 space-x-2">
           {item.type === 'directory' && (

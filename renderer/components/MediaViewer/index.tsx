@@ -62,65 +62,58 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
 
   useEffect(() => {
     if (layoutMode === 'vertical') {
+      // 确保在垂直模式下正确定位到当前index
+      requestAnimationFrame(() => {
+        const element = mediaRefs.current.get(currentIndex);
+        if (element) {
+          element.scrollIntoView({ behavior: 'instant', block: 'start' });
+        }
+      });
+
       observerRef.current = new IntersectionObserver(
         (entries) => {
+          // 使用节流来减少频繁更新
           const visibleEntries = entries.filter(entry => entry.isIntersecting);
           if (visibleEntries.length > 0) {
-            const firstVisible = visibleEntries.reduce((prev, current) => {
-              return prev.boundingClientRect.top < current.boundingClientRect.top ? prev : current;
+            const mostVisible = visibleEntries.reduce((prev, current) => {
+              return prev.intersectionRatio > current.intersectionRatio ? prev : current;
             });
-            const index = parseInt(firstVisible.target.getAttribute('data-index') || '0');
-            // 移除相邻限制，改为检查是否是有效的新索引
+            const index = parseInt(mostVisible.target.getAttribute('data-index') || '0');
             if (index >= 0 && index < files.length && index !== currentIndex) {
               setCurrentIndex(index);
             }
           }
         },
         {
-          root: null,
+          root: containerRef.current,
           rootMargin: '0px',
-          threshold: 0.5,
+          threshold: [0, 0.25, 0.5, 0.75, 1],
         }
       );
 
-      mediaRefs.current.forEach((element) => {
-        if (observerRef.current) {
-          observerRef.current.observe(element);
-        }
-      });
+      // 延迟添加观察者，确保初始滚动已完成
+      const timer = setTimeout(() => {
+        mediaRefs.current.forEach((element) => {
+          if (observerRef.current) {
+            observerRef.current.observe(element);
+          }
+        });
+      }, 100);
 
       return () => {
         if (observerRef.current) {
           observerRef.current.disconnect();
         }
+        clearTimeout(timer);
       };
     }
-  }, [layoutMode, files, currentIndex]);
-
-  useEffect(() => {
-    // 给一个小延时确保DOM已更新
-    const timer = setTimeout(() => {
-      if (layoutMode === 'vertical' && containerRef.current && mediaRefs.current.get(currentIndex)) {
-        const element = mediaRefs.current.get(currentIndex);
-        if (element) {
-          element.scrollIntoView({ behavior: 'auto', block: 'start' });
-        }
-      }
-    }, 50);
-    return () => clearTimeout(timer);
-  }, [layoutMode, currentIndex]);
-
-  useEffect(() => {
-    if (layoutMode === 'vertical' && containerRef.current && currentItemRef.current) {
-      containerRef.current.scrollTop = currentItemRef.current.offsetTop;
-    }
-  }, [currentIndex, layoutMode]);
+  }, [layoutMode, files.length]);
 
   useEffect(() => {
     setScale(1);
     setPosition({ x: 0, y: 0 });
-    setRotation(0); // 重置旋转角度
-    setIsWidthFitted(false); // 重置状态
+    setRotation(0);
+    setIsWidthFitted(false);
   }, [currentIndex, layoutMode]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
