@@ -13,6 +13,10 @@ import {
   Squares2X2Icon,
   ArrowsRightLeftIcon,
   ArrowsUpDownIcon,
+  PlayIcon,
+  PauseIcon,
+  SpeakerWaveIcon,
+  SpeakerXMarkIcon,
 } from '@heroicons/react/24/outline';
 import styles from './index.module.scss';
 
@@ -32,6 +36,15 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [rotation, setRotation] = useState(0);
   const [isWidthFitted, setIsWidthFitted] = useState(false);
+  // 新增视频控制状态
+  const [playingStates, setPlayingStates] = useState<{ [key: number]: boolean }>({});
+  const [playbackRate, setPlaybackRate] = useState(1);
+  const [volume, setVolume] = useState(1);
+  const [isMuted, setIsMuted] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [played, setPlayed] = useState(0);
+  const [seeking, setSeeking] = useState(false);
+  const [aspectRatio, setAspectRatio] = useState('16:9');
   const observerRef = useRef<IntersectionObserver | null>(null);
   const mediaRefs = useRef<Map<number, HTMLDivElement>>(new Map());
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -270,6 +283,94 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
     }
   }, [layoutMode, isWidthFitted, position.y]);
 
+  const handlePlaybackRateChange = (rate: number) => {
+    setPlaybackRate(rate);
+  };
+
+  const handleVolumeChange = (value: number) => {
+    setVolume(value);
+    if (value === 0) {
+      setIsMuted(true);
+    } else {
+      setIsMuted(false);
+    }
+  };
+
+  const handleToggleMute = () => {
+    setIsMuted(!isMuted);
+  };
+
+  const handleToggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      containerRef.current?.requestFullscreen();
+      setIsFullscreen(true);
+    } else {
+      document.exitFullscreen();
+      setIsFullscreen(false);
+    }
+  };
+
+  const handleProgress = (state: { played: number }) => {
+    if (!seeking) {
+      setPlayed(state.played);
+    }
+  };
+
+  const handleSeekMouseDown = () => {
+    setSeeking(true);
+  };
+
+  const handleSeekChange = (value: number) => {
+    setPlayed(value);
+  };
+
+  const handleSeekMouseUp = (value: number) => {
+    setSeeking(false);
+    if (currentItemRef.current) {
+      const player = currentItemRef.current.querySelector('video');
+      if (player) {
+        player.currentTime = value * player.duration;
+      }
+    }
+  };
+
+  const handleAspectRatioChange = (ratio: string) => {
+    setAspectRatio(ratio);
+  };
+
+  const togglePlay = (index: number) => {
+    setPlayingStates(prev => {
+      const newStates = { ...prev };
+      Object.keys(prev).forEach(key => {
+        newStates[parseInt(key)] = false;
+      });
+      newStates[index] = !prev[index];
+      return newStates;
+    });
+  };
+
+  const formatTime = (seconds: number) => {
+    const pad = (num: number) => String(Math.floor(num)).padStart(2, '0');
+    const hours = seconds / 3600;
+    const minutes = (seconds % 3600) / 60;
+    const secs = seconds % 60;
+    
+    if (hours >= 1) {
+      return `${pad(hours)}:${pad(minutes)}:${pad(secs)}`;
+    }
+    return `${pad(minutes)}:${pad(secs)}`;
+  };
+
+  const getCurrentTime = () => {
+    if (currentItemRef.current) {
+      const video = currentItemRef.current.querySelector('video');
+      if (video) {
+        return formatTime(video.currentTime) + ' / ' + formatTime(video.duration);
+      }
+    }
+    return '00:00 / 00:00';
+  };
+
   const renderToolbar = () => (
     <div className={styles.toolbar}>
       <div className={styles.file_counter}>
@@ -330,6 +431,7 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
   const renderMediaItem = (file: MediaFile, index: number) => {
     const isImage = file.type === 'image';
     const isCurrent = index === currentIndex;
+    const isPlaying = playingStates[index] || false;
     const imageClasses = [
       isDragging && 'dragging',
       rotation !== 0 && 'rotating'
@@ -364,16 +466,122 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
             draggable={false}
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <ReactPlayer
-              url={`file://${file.path}`}
-              width="100%"
-              height="100%"
-              controls
-              playing={false}
-              style={{ maxHeight: '100%' }}
-              className={styles.react_player}
-            />
+          <div className={`${styles.media_container} ${!isPlaying ? styles.paused : ''}`}>
+            <div 
+              className={styles.video_wrapper}
+              onClick={isCurrent ? () => togglePlay(index) : undefined}
+            >
+              <ReactPlayer
+                url={`file://${file.path}`}
+                width="100%"
+                height="100%"
+                playing={isPlaying}
+                playbackRate={playbackRate}
+                volume={volume}
+                muted={isMuted}
+                style={{ maxHeight: '100%', aspectRatio }}
+                onProgress={isCurrent ? handleProgress : undefined}
+                progressInterval={1000}
+                controls={false}
+                config={{
+                  file: {
+                    attributes: {
+                      controlsList: 'nodownload',
+                      disablePictureInPicture: true,
+                      style: {
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'contain'
+                      }
+                    }
+                  }
+                }}
+              />
+            </div>
+            {!isPlaying && isCurrent && (
+              <div 
+                className={styles.center_play_button}
+                onClick={() => togglePlay(index)}
+              >
+                <PlayIcon className="w-16 h-16" />
+              </div>
+            )}
+            {isCurrent && (
+              <div className={styles.video_controls}>
+                <button onClick={() => togglePlay(index)}>
+                  {isPlaying ? (
+                    <PauseIcon className="w-5 h-5" />
+                  ) : (
+                    <PlayIcon className="w-5 h-5" />
+                  )}
+                </button>
+                
+                <div className={styles.progress_bar} data-time={getCurrentTime()}>
+                  <input
+                    type="range"
+                    min={0}
+                    max={1}
+                    step="any"
+                    value={played}
+                    onMouseDown={handleSeekMouseDown}
+                    onChange={(e) => handleSeekChange(parseFloat(e.target.value))}
+                    onMouseUp={(e) => handleSeekMouseUp(parseFloat((e.target as HTMLInputElement).value))}
+                    style={{ '--progress': `${played * 100}%` } as React.CSSProperties}
+                  />
+                </div>
+
+                <div className={styles.volume_control}>
+                  <button onClick={handleToggleMute}>
+                    {isMuted || volume === 0 ? (
+                      <SpeakerXMarkIcon className="w-5 h-5" />
+                    ) : (
+                      <SpeakerWaveIcon className="w-5 h-5" />
+                    )}
+                  </button>
+                  <div className={styles.volume_slider}>
+                    <input
+                      type="range"
+                      min={0}
+                      max={1}
+                      step="any"
+                      value={volume}
+                      onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
+                      style={{ '--volume': `${volume * 100}%` } as React.CSSProperties}
+                    />
+                  </div>
+                </div>
+
+                <div className={styles.right_controls}>
+                  <select
+                    value={playbackRate}
+                    onChange={(e) => handlePlaybackRateChange(parseFloat(e.target.value))}
+                  >
+                    <option value={0.5}>0.5x</option>
+                    <option value={1}>1x</option>
+                    <option value={1.5}>1.5x</option>
+                    <option value={2}>2x</option>
+                  </select>
+
+                  <select
+                    value={aspectRatio}
+                    onChange={(e) => handleAspectRatioChange(e.target.value)}
+                  >
+                    <option value="16:9">16:9</option>
+                    <option value="4:3">4:3</option>
+                    <option value="1:1">1:1</option>
+                    <option value="auto">自动</option>
+                  </select>
+
+                  <button onClick={handleToggleFullscreen}>
+                    {isFullscreen ? (
+                      <ArrowsPointingInIcon className="w-5 h-5" />
+                    ) : (
+                      <ArrowsPointingOutIcon className="w-5 h-5" />
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -448,24 +656,6 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
       {layoutMode === 'horizontal' ? (
         <div className={styles.horizontal_container}>
           {renderMediaItem(currentFile, currentIndex)}
-          {/* <div className={styles.bottom_toolbar}>
-            <button onClick={handleZoomOut} title="缩小">
-              <MinusIcon />
-              缩小
-            </button>
-            <button onClick={handleZoomIn} title="放大">
-              <PlusIcon />
-              放大
-            </button>
-            <button onClick={handleFitToScreen} title="适应屏幕">
-              <ArrowsPointingInIcon />
-              适应
-            </button>
-            <button onClick={() => setScale(2)} title="200%">
-              <ArrowsPointingOutIcon />
-              200%
-            </button>
-          </div> */}
         </div>
       ) : (
         <div className={styles.vertical_container}>
