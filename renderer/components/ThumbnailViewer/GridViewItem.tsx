@@ -24,11 +24,19 @@ const GridItem: React.FC<GridItemProps> = React.memo(({ file, onDirectoryClick, 
     title={file.name}
   >
     {file.type === 'image' ? (
-      <LazyImage
-        src={`file://${file.path}`}
-        alt={file.name}
-        className="w-full h-full object-cover"
-      />
+      file.name.toLowerCase().endsWith('.gif') ? (
+        <img
+          src={`file://${file.path}`}
+          alt={file.name}
+          className="w-full h-full object-cover"
+        />
+      ) : (
+        <LazyImage
+          src={`file://${file.path}`}
+          alt={file.name}
+          className="w-full h-full object-cover"
+        />
+      )
     ) : file.type === 'video' ? (
       <VideoThumbnail
         videoPath={file.path}
