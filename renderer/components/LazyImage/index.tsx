@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { LoadQueue } from '../common/LoadQueue';
-import { throttle } from '../common/utils';
+import { LoadQueue } from '../../common/LoadQueue';
+import { throttle } from '../../common/utils';
 
 // 创建图片加载队列
 const imageQueue = new LoadQueue(10, async (path: string) => {

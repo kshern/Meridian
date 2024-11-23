@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { LoadQueue } from '../common/LoadQueue';
-import { throttle } from '../common/utils';
+import { LoadQueue } from '../../common/LoadQueue';
+import { throttle } from '../../common/utils';
 import { PlayIcon } from '@heroicons/react/24/outline';
 import LazyImage from '../LazyImage';
 
