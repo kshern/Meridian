@@ -5,6 +5,7 @@ import useTheme from '../../hooks/useTheme';
 
 interface FolderTreeProps {
   onSelect: (path: string) => void;
+  showMediaOnly?: boolean;
 }
 
 interface TreeItem {
@@ -35,10 +36,21 @@ const FileIcon = ({ type }: { type: string }) => {
   }
 };
 
-const TreeNode = ({ item, level = 0, onSelect, onToggle }: { item: TreeItem; level?: number; onSelect: (path: string) => void; onToggle: (path: string) => void }) => {
+const TreeNode = ({ item, level = 0, onSelect, onToggle, showMediaOnly }: { 
+  item: TreeItem; 
+  level?: number; 
+  onSelect: (path: string) => void; 
+  onToggle: (path: string) => void;
+  showMediaOnly?: boolean;
+}) => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   const indent = level * 20;
+
+  // 如果启用了仅显示媒体文件，且当前项既不是目录也不是媒体文件，则不显示
+  if (showMediaOnly && item.type !== 'directory' && item.type !== 'image' && item.type !== 'video') {
+    return null;
+  }
 
   const handleClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -113,6 +125,7 @@ const TreeNode = ({ item, level = 0, onSelect, onToggle }: { item: TreeItem; lev
               level={level + 1}
               onSelect={onSelect}
               onToggle={onToggle}
+              showMediaOnly={showMediaOnly}
             />
           ))}
         </div>
@@ -130,7 +143,7 @@ const formatFileSize = (bytes: number): string => {
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
 };
 
-const FolderTree: React.FC<FolderTreeProps> = ({ onSelect }) => {
+const FolderTree: React.FC<FolderTreeProps> = ({ onSelect, showMediaOnly }) => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   const [folders, setFolders] = useState<TreeItem[]>([]);
@@ -231,9 +244,10 @@ const FolderTree: React.FC<FolderTreeProps> = ({ onSelect }) => {
         <TreeNode
           key={folder.path}
           item={folder}
-          level={0}
           onSelect={onSelect}
           onToggle={handleToggle}
+          level={0}
+          showMediaOnly={showMediaOnly}
         />
       ))}
     </div>

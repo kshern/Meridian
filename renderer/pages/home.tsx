@@ -108,7 +108,7 @@ function Home() {
               className="border-r border-gray-200 dark:border-gray-700 relative" 
               style={{ width: sidebarWidth, minWidth: sidebarWidth }}
             >
-              <FolderTree onSelect={handleDirectoryClick} />
+              <FolderTree onSelect={handleDirectoryClick} showMediaOnly={filterOtherFiles} />
               {/* 拖拽手柄 */}
               <div
                 className="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-blue-500 group"
