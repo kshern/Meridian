@@ -2,14 +2,31 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { LoadQueue } from '../../common/LoadQueue';
 import { throttle } from '../../common/utils';
 
-// 创建图片加载队列
-const imageQueue = new LoadQueue(10, async (path: string) => {
-  return new Promise(resolve => {
-    const img = new Image();
-    img.onload = () => resolve(true);
-    img.onerror = () => resolve(false);
-    img.src = path;
-  });
+// 创建缩略图缓存
+const thumbnailCache = new Map<string, string>();
+
+// 创建图片加载队列，限制并发数为5
+const imageQueue = new LoadQueue(5, async (path: string) => {
+  try {
+    // 移除 file:// 前缀
+    const filePath = path.replace('file://', '');
+    
+    // 检查缓存
+    if (thumbnailCache.has(filePath)) {
+      return true;
+    }
+
+    // 使用IPC调用主进程生成缩略图
+    const thumbnail = await window.electron.generateThumbnail(filePath, 400);
+    if (thumbnail) {
+      thumbnailCache.set(filePath, thumbnail);
+      return true;
+    }
+    return false;
+  } catch (error) {
+    console.error('Failed to load image:', error);
+    return false;
+  }
 });
 
 interface LazyImageProps {
@@ -100,26 +117,28 @@ const LazyImage: React.FC<LazyImageProps> = React.memo(({ src, alt, className })
 
   if (error) {
     return (
-      <div ref={imgRef} className={`flex items-center justify-center h-full ${className} bg-gray-800`}>
-        <span className="text-sm text-gray-400">Failed to load image</span>
+      <div ref={imgRef} className={`${className} bg-gray-800 flex items-center justify-center`}>
+        <span className="text-gray-400">Failed to load image</span>
       </div>
     );
   }
 
+  const filePath = src.replace('file://', '');
+  const thumbnailSrc = thumbnailCache.get(filePath);
+
   return (
-    <div ref={imgRef} className="relative w-full h-full">
-      {isLoading && !isLoaded && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-800">
-          <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+    <div ref={imgRef} className={`${className} relative bg-gray-800`}>
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="w-6 h-6 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
         </div>
       )}
-      {(isLoaded || !isLoading) && (
+      {isLoaded && thumbnailSrc && (
         <img
-          src={src}
+          src={thumbnailSrc}
           alt={alt}
-          className={`w-full h-full object-cover transition-opacity duration-300 ${
-            isLoaded ? 'opacity-100' : 'opacity-0'
-          } ${className || ''}`}
+          className={`${className} object-cover`}
+          loading="lazy"
         />
       )}
     </div>

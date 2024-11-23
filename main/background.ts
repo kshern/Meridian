@@ -6,6 +6,7 @@ import { scanDirectory, getFileContent, MediaFile } from './fileUtils'
 import * as fs from 'fs'
 import Store from 'electron-store'
 import { generateVideoThumbnail } from './videoUtils';
+import { generateThumbnail } from './thumbnailGenerator';
 
 // 初始化 electron-store
 const store = new Store({
@@ -100,11 +101,10 @@ const registerIpcHandlers = () => {
   // 处理打开文件资源管理器
   ipcMain.handle('open-in-explorer', async (_, path: string) => {
     try {
-      await shell.openPath(path);
-      return true;
+      await shell.showItemInFolder(path)
     } catch (error) {
-      log.error('Error opening in explorer:', error);
-      return false;
+      log.error('Error opening in explorer:', error)
+      throw error
     }
   });
 
@@ -117,6 +117,27 @@ const registerIpcHandlers = () => {
     } catch (error) {
       log.error('Error handling file click:', error);
       throw error;
+    }
+  });
+
+  // 处理缩略图生成
+  ipcMain.handle('generate-thumbnail', async (_, imagePath: string, size: number) => {
+    try {
+      return await generateThumbnail(imagePath, size);
+    } catch (error) {
+      log.error('Error generating thumbnail:', error);
+      return '';
+    }
+  });
+
+  // 处理视频缩略图生成
+  ipcMain.handle('get-video-thumbnail', async (_, videoPath: string) => {
+    try {
+      const thumbnailPath = await generateVideoThumbnail(videoPath);
+      return thumbnailPath;
+    } catch (error) {
+      console.error('Error generating video thumbnail:', error);
+      return null;
     }
   });
 
@@ -200,17 +221,6 @@ const registerIpcHandlers = () => {
   // 处理窗口关闭
   ipcMain.handle('close-window', () => {
     mainWindow.close();
-  });
-
-  // 处理视频缩略图生成
-  ipcMain.handle('get-video-thumbnail', async (_, videoPath: string) => {
-    try {
-      const thumbnailPath = await generateVideoThumbnail(videoPath);
-      return thumbnailPath;
-    } catch (error) {
-      console.error('Error generating video thumbnail:', error);
-      return null;
-    }
   });
 }
 

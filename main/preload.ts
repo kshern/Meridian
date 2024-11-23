@@ -39,6 +39,7 @@ interface ElectronAPI {
   minimize(): Promise<void>;
   maximize(): Promise<void>;
   close(): Promise<void>;
+  generateThumbnail(path: string, size: number): Promise<string>;
   ipcRenderer: {
     invoke(channel: string, ...args: any[]): Promise<any>;
   };
@@ -116,6 +117,7 @@ const electronHandler: ElectronAPI = {
   minimize: () => ipcRenderer.invoke('minimize-window'),
   maximize: () => ipcRenderer.invoke('maximize-window'),
   close: () => ipcRenderer.invoke('close-window'),
+  generateThumbnail: (path: string, size: number) => ipcRenderer.invoke('generate-thumbnail', path, size),
   ipcRenderer: {
     invoke: (channel: string, ...args: any[]) => ipcRenderer.invoke(channel, ...args),
   },
