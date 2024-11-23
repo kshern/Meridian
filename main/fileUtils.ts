@@ -4,23 +4,23 @@ import path from 'path';
 
 // 支持的文件类型
 const SUPPORTED_IMAGE_TYPES = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
-const SUPPORTED_VIDEO_TYPES = ['.mp4', '.webm', '.mkv'];
+const SUPPORTED_VIDEO_TYPES = ['.mp4', '.webm', '.mkv','.mov', '.avi', '.mpg', '.mpeg', '.wmv', '.flv'];
 const SUPPORTED_TEXT_TYPES = ['.txt']
 
 export interface MediaFile {
   path: string;
-  type: 'image' | 'video' | 'text' | 'directory';
+  type: 'image' | 'video' | 'text' | 'directory' | 'other';
   name: string;
   size: number;
   modifiedTime: Date;
 }
 
-export function getFileType(filePath: string): 'image' | 'video' | 'text' | null {
+export function getFileType(filePath: string): 'image' | 'video' | 'text' | 'directory' | 'other' {
   const ext = path.extname(filePath).toLowerCase();
   if (SUPPORTED_IMAGE_TYPES.includes(ext)) return 'image';
   if (SUPPORTED_VIDEO_TYPES.includes(ext)) return 'video';
   if (SUPPORTED_TEXT_TYPES.includes(ext)) return 'text';
-  return null;
+  return 'other';
 }
 
 export async function scanDirectory(dirPath: string): Promise<MediaFile[]> {
@@ -43,12 +43,12 @@ export async function scanDirectory(dirPath: string): Promise<MediaFile[]> {
     const entries = await fs.promises.readdir(normalizedPath, { withFileTypes: true });
     console.log(`Found ${entries.length} entries in ${normalizedPath}`);
 
+    // 处理每个文件
     for (const entry of entries) {
       try {
         const fullPath = path.join(normalizedPath, entry.name);
         const stats = await fs.promises.stat(fullPath);
 
-        // 对于目录，直接添加
         if (entry.isDirectory()) {
           mediaFiles.push({
             path: fullPath,
@@ -57,39 +57,33 @@ export async function scanDirectory(dirPath: string): Promise<MediaFile[]> {
             size: 0,
             modifiedTime: stats.mtime
           });
-          continue;
-        }
-
-        // 对于文件，检查是否是支持的类型
-        const type = getFileType(fullPath);
-        if (type) {
+        } else {
           mediaFiles.push({
             path: fullPath,
-            type,
+            type: getFileType(fullPath),
             name: entry.name,
             size: stats.size,
             modifiedTime: stats.mtime
           });
         }
       } catch (error) {
-        // 跳过无法访问的文件或目录
         console.warn(`Cannot access file or directory: ${entry.name}`, error);
         continue;
       }
     }
-  } catch (error) {
-    console.error(`Cannot read directory: ${dirPath}`, error);
-    throw error;
-  }
 
-  // 按类型和名称排序
-  return mediaFiles.sort((a, b) => {
-    // 目录排在前面
-    if (a.type === 'directory' && b.type !== 'directory') return -1;
-    if (a.type !== 'directory' && b.type === 'directory') return 1;
-    // 同类型按名称排序
-    return a.name.localeCompare(b.name);
-  });
+    // 按类型和名称排序：目录在前，文件在后
+    mediaFiles.sort((a, b) => {
+      if (a.type === 'directory' && b.type !== 'directory') return -1;
+      if (a.type !== 'directory' && b.type === 'directory') return 1;
+      return a.name.localeCompare(b.name);
+    });
+
+    return mediaFiles;
+  } catch (error) {
+    console.error('Error scanning directory:', error);
+    return [];
+  }
 }
 
 // 获取文件内容

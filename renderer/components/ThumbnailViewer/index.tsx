@@ -1,7 +1,7 @@
 import React, { useMemo, useCallback } from 'react';
 import { List, AutoSizer } from 'react-virtualized';
 import { MediaFile } from '../../../main/fileUtils';
-import { FolderIcon, PhotoIcon, DocumentIcon } from '@heroicons/react/24/outline';
+import { FolderIcon, PhotoIcon, DocumentIcon, FilmIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
 import useTheme from '../../hooks/useTheme';
 import ListItem from './ListViewItem';
 import GridItem from './GridViewItem';
@@ -26,8 +26,10 @@ const ThumbnailViewer: React.FC<ThumbnailViewerProps> = ({ files, onDirectoryCli
         case 'video':
           return colors.videoIcon;
         case 'text':
-        default:
           return colors.textIcon;
+        case 'other':
+        default:
+          return 'text-gray-400';
       }
     };
 
@@ -36,10 +38,13 @@ const ThumbnailViewer: React.FC<ThumbnailViewerProps> = ({ files, onDirectoryCli
     switch (file.type) {
       case 'directory':
         return <FolderIcon className={iconClass} />;
-      case 'text':
-        return <DocumentIcon className={iconClass} />;
       case 'image':
         return <PhotoIcon className={iconClass} />;
+      case 'video':
+        return <FilmIcon className={iconClass} />;
+      case 'text':
+        return <DocumentTextIcon className={iconClass} />;
+      case 'other':
       default:
         return <DocumentIcon className={iconClass} />;
     }
