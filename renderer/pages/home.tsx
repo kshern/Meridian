@@ -18,6 +18,7 @@ function Home() {
     selectedFileIndex,
     viewType,
     searchQuery,
+    filterOtherFiles,
     setSearchQuery,
     handleOpenDirectory,
     handleDirectoryClick,
@@ -26,6 +27,7 @@ function Home() {
     handlePathSegmentClick,
     handleOpenInExplorer,
     handleViewModeChange,
+    handleFilterChange,
     getMediaFiles,
   } = useFileOperations();
 
@@ -88,11 +90,13 @@ function Home() {
         />
 
         {/* 地址栏 */}
-        {currentPath && showPathBar && (
+        {showPathBar && (
           <PathBar
             currentPath={currentPath}
             onPathSegmentClick={handlePathSegmentClick}
             onOpenInExplorer={handleOpenInExplorer}
+            filterOtherFiles={filterOtherFiles}
+            onFilterChange={handleFilterChange}
           />
         )}
 

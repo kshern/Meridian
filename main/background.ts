@@ -43,9 +43,9 @@ let mainWindow: any;
 // 注册所有 IPC 处理程序
 const registerIpcHandlers = () => {
   // 处理目录扫描请求
-  ipcMain.handle('scan-directory', async (_, dirPath: string) => {
+  ipcMain.handle('scan-directory', async (_, dirPath: string, filterOtherFiles?: boolean) => {
     try {
-      return await scanDirectory(dirPath)
+      return await scanDirectory(dirPath, filterOtherFiles)
     } catch (error) {
       log.error('Error scanning directory:', error)
       throw error

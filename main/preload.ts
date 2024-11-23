@@ -12,7 +12,7 @@ declare global {
 interface FileAPI {
   send(channel: string, value: unknown): void;
   on(channel: string, callback: (...args: unknown[]) => void): () => void;
-  scanDirectory(path: string): Promise<MediaFile[]>;
+  scanDirectory(path: string, filterOtherFiles?: boolean): Promise<MediaFile[]>;
   openDirectory(): Promise<string>;
   readTextFile(path: string): Promise<string>;
   openInExplorer(path: string): Promise<void>;
@@ -30,7 +30,7 @@ interface FileAPI {
 }
 
 interface ElectronAPI {
-  scanDirectory(dirPath: string): Promise<MediaFile[]>;
+  scanDirectory(dirPath: string, filterOtherFiles?: boolean): Promise<MediaFile[]>;
   getDrives(): Promise<string[]>;
   openDirectory(): Promise<string>;
   readTextFile(filePath: string): Promise<string>;
@@ -57,8 +57,8 @@ const handler: FileAPI = {
       ipcRenderer.removeListener(channel, subscription);
     };
   },
-  async scanDirectory(path: string) {
-    return ipcRenderer.invoke('scan-directory', path);
+  async scanDirectory(path: string, filterOtherFiles?: boolean) {
+    return ipcRenderer.invoke('scan-directory', path, filterOtherFiles);
   },
   async openDirectory() {
     return ipcRenderer.invoke('open-directory');
@@ -107,7 +107,7 @@ const handler: FileAPI = {
 };
 
 const electronHandler: ElectronAPI = {
-  scanDirectory: (dirPath: string) => ipcRenderer.invoke('scan-directory', dirPath),
+  scanDirectory: (dirPath: string, filterOtherFiles?: boolean) => ipcRenderer.invoke('scan-directory', dirPath, filterOtherFiles),
   getDrives: () => ipcRenderer.invoke('get-drives'),
   openDirectory: () => ipcRenderer.invoke('open-directory'),
   readTextFile: (filePath: string) => ipcRenderer.invoke('read-text-file', filePath),

@@ -23,7 +23,7 @@ export function getFileType(filePath: string): 'image' | 'video' | 'text' | 'dir
   return 'other';
 }
 
-export async function scanDirectory(dirPath: string): Promise<MediaFile[]> {
+export async function scanDirectory(dirPath: string, filterOtherFiles: boolean = false): Promise<MediaFile[]> {
   const mediaFiles: MediaFile[] = [];
 
   try {
@@ -58,9 +58,13 @@ export async function scanDirectory(dirPath: string): Promise<MediaFile[]> {
             modifiedTime: stats.mtime
           });
         } else {
+          const fileType = getFileType(fullPath);
+          // 在过滤模式下跳过 'other' 类型的文件
+          if (filterOtherFiles && fileType === 'other') continue;
+          
           mediaFiles.push({
             path: fullPath,
-            type: getFileType(fullPath),
+            type: fileType,
             name: entry.name,
             size: stats.size,
             modifiedTime: stats.mtime

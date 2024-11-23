@@ -8,13 +8,14 @@ export const useFileOperations = () => {
   const [selectedFileIndex, setSelectedFileIndex] = useState<number>(0);
   const [viewType, setViewType] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [filterOtherFiles, setFilterOtherFiles] = useState<boolean>(false);
 
   const handleOpenDirectory = async () => {
     try {
       const path = await window.ipc.openDirectory();
       if (path) {
         const appPath = window.ipc.convertToAppPath(path);
-        const mediaFiles = await window.ipc.scanDirectory(path);
+        const mediaFiles = await window.ipc.scanDirectory(path, filterOtherFiles);
         setFiles(mediaFiles);
         setCurrentPath(appPath);
         setSelectedFileIndex(0);
@@ -33,7 +34,7 @@ export const useFileOperations = () => {
       const systemPath = isDriveRoot ? path + '\\' : path;
       const appPath = window.ipc.convertToAppPath(systemPath);
       
-      const mediaFiles = await window.ipc.scanDirectory(systemPath);
+      const mediaFiles = await window.ipc.scanDirectory(systemPath, filterOtherFiles);
       setFiles(mediaFiles);
       setCurrentPath(appPath);
       setSelectedFileIndex(0);
@@ -62,7 +63,7 @@ export const useFileOperations = () => {
       }
 
       const systemPath = window.ipc.convertToSystemPath(targetPath);
-      const mediaFiles = await window.ipc.scanDirectory(systemPath);
+      const mediaFiles = await window.ipc.scanDirectory(systemPath, filterOtherFiles);
       setFiles(mediaFiles);
       setCurrentPath(targetPath);
       setSelectedFileIndex(0);
@@ -90,7 +91,7 @@ export const useFileOperations = () => {
         
         // 如果不在当前目录，先切换到文件所在目录
         if (appDirPath !== currentPath) {
-          const mediaFiles = await window.ipc.scanDirectory(systemPath);
+          const mediaFiles = await window.ipc.scanDirectory(systemPath, filterOtherFiles);
           setFiles(mediaFiles);
           setCurrentPath(appDirPath);
           
@@ -130,7 +131,7 @@ export const useFileOperations = () => {
     try {
       const appPath = targetPath;
       const systemPath = window.ipc.convertToSystemPath(appPath);
-      const mediaFiles = await window.ipc.scanDirectory(systemPath);
+      const mediaFiles = await window.ipc.scanDirectory(systemPath, filterOtherFiles);
       setFiles(mediaFiles);
       setCurrentPath(appPath);
       setSelectedFileIndex(0);
@@ -162,12 +163,23 @@ export const useFileOperations = () => {
     return files.filter(f => f.type === 'image' || f.type === 'video');
   };
 
+  const handleFilterChange = async (value: boolean) => {
+    setFilterOtherFiles(value);
+    try {
+      const systemPath = window.ipc.convertToSystemPath(currentPath);
+      const mediaFiles = await window.ipc.scanDirectory(systemPath, value);
+      setFiles(mediaFiles);
+    } catch (error) {
+      console.error('Error applying filter:', error);
+    }
+  };
+
   // 监听外部打开路径的事件
   useEffect(() => {
     const cleanup = window.ipc.on('open-path', async (path: string) => {
       if (path) {
         const appPath = window.ipc.convertToAppPath(path);
-        const mediaFiles = await window.ipc.scanDirectory(path);
+        const mediaFiles = await window.ipc.scanDirectory(path, filterOtherFiles);
         setFiles(mediaFiles);
         setCurrentPath(appPath);
         setSelectedFileIndex(0);
@@ -177,7 +189,7 @@ export const useFileOperations = () => {
     });
 
     return cleanup;
-  }, []);
+  }, [filterOtherFiles]);
 
   useEffect(() => {
     const cleanup = window.ipc.on('file-clicked', (file: any) => {
@@ -196,9 +208,11 @@ export const useFileOperations = () => {
     selectedFileIndex,
     viewType,
     searchQuery,
+    filterOtherFiles,
     // 设置器
     setSearchQuery,
     setViewMode,
+    setFilterOtherFiles,
     // 处理方法
     handleOpenDirectory,
     handleDirectoryClick,
@@ -207,6 +221,7 @@ export const useFileOperations = () => {
     handlePathSegmentClick,
     handleOpenInExplorer,
     handleViewModeChange,
+    handleFilterChange,
     // 工具方法
     getMediaFiles,
   };

@@ -6,12 +6,16 @@ interface PathBarProps {
   currentPath: string;
   onPathSegmentClick: (index: number) => void;
   onOpenInExplorer: () => void;
+  filterOtherFiles: boolean;
+  onFilterChange: (value: boolean) => void;
 }
 
 const PathBar: React.FC<PathBarProps> = ({
   currentPath,
   onPathSegmentClick,
   onOpenInExplorer,
+  filterOtherFiles,
+  onFilterChange,
 }) => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
@@ -31,6 +35,10 @@ const PathBar: React.FC<PathBarProps> = ({
   const buttonClasses = isDark
     ? "p-2 rounded-lg text-gray-400 hover:text-gray-200 hover:bg-gray-700 transition-all duration-200"
     : "p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200";
+
+  const toggleClasses = isDark
+    ? "flex items-center px-2 py-1 rounded text-gray-400 hover:text-gray-200"
+    : "flex items-center px-2 py-1 rounded text-gray-600 hover:text-gray-900";
 
   return (
     <div className={`flex items-center px-2 py-1 border-b justify-between ${
@@ -59,6 +67,15 @@ const PathBar: React.FC<PathBarProps> = ({
         ))}
       </div>
       <div className="flex items-center gap-2">
+        <label className={toggleClasses}>
+          <input
+            type="checkbox"
+            checked={filterOtherFiles}
+            onChange={(e) => onFilterChange(e.target.checked)}
+            className="mr-2"
+          />
+          仅显示媒体文件
+        </label>
         <button
           onClick={onOpenInExplorer}
           className={buttonClasses}
