@@ -104,20 +104,16 @@ function Home() {
         <div className="flex flex-1 overflow-hidden">
           {/* 侧边栏 */}
           {showSidebar && (
-            <div 
-              className={`h-full overflow-y-auto ${
-                showSidebar ? 'block' : 'hidden'
-              }`}
-              style={{ width: sidebarWidth }}
-            >
-              <FolderTree onSelect={handleDirectoryClick} showMediaOnly={filterOtherFiles} currentPath={currentPath} />
-              {/* 拖拽手柄 */}
+            <div className="relative" style={{ width: sidebarWidth }}>
+              <FolderTree
+                onSelect={handleDirectoryClick}
+                showMediaOnly={filterOtherFiles}
+                currentPath={currentPath}
+              />
               <div
-                className="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-blue-500 group"
+                className="absolute right-0 top-0 w-1 h-full cursor-col-resize hover:bg-gray-300 dark:hover:bg-gray-600"
                 onMouseDown={startResizing}
-              >
-                <div className={`absolute inset-0 bg-blue-500 opacity-0 group-hover:opacity-50 transition-opacity ${isResizing ? 'opacity-50' : ''}`} />
-              </div>
+              />
             </div>
           )}
           

@@ -53,16 +53,13 @@ export const useSidebarResize = () => {
     if (isResizing) {
       window.addEventListener('mousemove', resize);
       window.addEventListener('mouseup', stopResizing);
-      return () => {
-        window.removeEventListener('mousemove', resize);
-        window.removeEventListener('mouseup', stopResizing);
-      };
     }
+
+    return () => {
+      window.removeEventListener('mousemove', resize);
+      window.removeEventListener('mouseup', stopResizing);
+    };
   }, [isResizing, resize, stopResizing]);
 
-  return {
-    sidebarWidth,
-    isResizing,
-    startResizing
-  };
+  return { sidebarWidth, isResizing, startResizing };
 };

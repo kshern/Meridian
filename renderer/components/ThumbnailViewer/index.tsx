@@ -111,6 +111,14 @@ const ThumbnailViewer: React.FC<ThumbnailViewerProps> = ({ files, onDirectoryCli
     );
   }, [files, viewType, getColumnsCount, getFileIcon, colors, onDirectoryClick, onFileClick]);
 
+  if (files.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-full w-full text-gray-400">
+        <p>暂无文件</p>
+      </div>
+    );
+  }
+
   return (
     <div className={`h-full ${colors.background}`}>
       <AutoSizer>
