@@ -24,7 +24,7 @@ const GridItem: React.FC<GridItemProps> = React.memo(({ file, onDirectoryClick, 
     title={file.name}
   >
     {file.type === 'image' ? (
-      file.name.toLowerCase().endsWith('.gif') ? (
+      file.name.toLowerCase().endsWith('.gif') || file.name.toLowerCase().endsWith('.webp') ? (
         <img
           src={`file://${file.path}`}
           alt={file.name}
