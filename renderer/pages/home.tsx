@@ -105,10 +105,12 @@ function Home() {
           {/* 侧边栏 */}
           {showSidebar && (
             <div 
-              className="border-r border-gray-200 dark:border-gray-700 relative" 
-              style={{ width: sidebarWidth, minWidth: sidebarWidth }}
+              className={`h-full overflow-y-auto ${
+                showSidebar ? 'block' : 'hidden'
+              }`}
+              style={{ width: sidebarWidth }}
             >
-              <FolderTree onSelect={handleDirectoryClick} showMediaOnly={filterOtherFiles} />
+              <FolderTree onSelect={handleDirectoryClick} showMediaOnly={filterOtherFiles} currentPath={currentPath} />
               {/* 拖拽手柄 */}
               <div
                 className="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-blue-500 group"

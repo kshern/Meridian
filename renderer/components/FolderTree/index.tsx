@@ -6,6 +6,7 @@ import useTheme from '../../hooks/useTheme';
 interface FolderTreeProps {
   onSelect: (path: string) => void;
   showMediaOnly?: boolean;
+  currentPath?: string;
 }
 
 interface TreeItem {
@@ -36,16 +37,23 @@ const FileIcon = ({ type }: { type: string }) => {
   }
 };
 
-const TreeNode = ({ item, level = 0, onSelect, onToggle, showMediaOnly }: { 
+const TreeNode = ({ item, level = 0, onSelect, onToggle, showMediaOnly, currentPath }: { 
   item: TreeItem; 
   level?: number; 
   onSelect: (path: string) => void; 
   onToggle: (path: string) => void;
   showMediaOnly?: boolean;
+  currentPath?: string;
 }) => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   const indent = level * 20;
+  const isCurrentPath = currentPath === item.path;
+  const isCollapsedParentOfCurrentPath = currentPath && !item.isExpanded && (
+    currentPath.startsWith(item.path) && 
+    currentPath.charAt(item.path.length) === '>' &&
+    item.path !== currentPath
+  );
 
   // 如果启用了仅显示媒体文件，且当前项既不是目录也不是媒体文件，则不显示
   if (showMediaOnly && item.type !== 'directory' && item.type !== 'image' && item.type !== 'video') {
@@ -82,14 +90,14 @@ const TreeNode = ({ item, level = 0, onSelect, onToggle, showMediaOnly }: {
 
   return (
     <div>
-      <div
-        className={`
-          flex items-center py-1.5 px-3 
+      <div 
+        className={`flex items-center py-1.5 px-3 
           ${isDark ? 'hover:bg-gray-700/50' : 'hover:bg-gray-50'}
           cursor-pointer transition-colors duration-200
           rounded-lg mx-1 my-0.5
           ${item.type === 'directory' ? 'font-medium' : 'font-normal'}
           ${isDark ? 'text-gray-200' : 'text-gray-700'}
+          ${(isCurrentPath || isCollapsedParentOfCurrentPath) ? (isDark ? 'bg-gray-700' : 'bg-gray-100') : ''}
         `}
         style={{ paddingLeft: `${indent + 12}px` }}
         onClick={handleClick}
@@ -126,6 +134,7 @@ const TreeNode = ({ item, level = 0, onSelect, onToggle, showMediaOnly }: {
               onSelect={onSelect}
               onToggle={onToggle}
               showMediaOnly={showMediaOnly}
+              currentPath={currentPath}
             />
           ))}
         </div>
@@ -143,7 +152,7 @@ const formatFileSize = (bytes: number): string => {
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
 };
 
-const FolderTree: React.FC<FolderTreeProps> = ({ onSelect, showMediaOnly }) => {
+const FolderTree: React.FC<FolderTreeProps> = ({ onSelect, showMediaOnly, currentPath }) => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   const [folders, setFolders] = useState<TreeItem[]>([]);
@@ -248,6 +257,7 @@ const FolderTree: React.FC<FolderTreeProps> = ({ onSelect, showMediaOnly }) => {
           onToggle={handleToggle}
           level={0}
           showMediaOnly={showMediaOnly}
+          currentPath={currentPath}
         />
       ))}
     </div>
