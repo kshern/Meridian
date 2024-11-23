@@ -228,7 +228,17 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
         const currentWidth = imgRect.width / scale;
         const newScale = containerRect.width / currentWidth;
         setScale(newScale);
-        setPosition({ x: 0, y: 0 });
+        
+        // 计算图片在新scale下的高度
+        const newHeight = imgRect.height * (newScale / scale);
+        // 如果图片高度大于容器，将其定位到顶部
+        if (newHeight > containerRect.height) {
+          const maxY = (newHeight - containerRect.height) / 2;
+          setPosition({ x: 0, y: maxY });
+        } else {
+          setPosition({ x: 0, y: 0 });
+        }
+        
         setIsWidthFitted(true);
       }
     } else {
@@ -237,6 +247,28 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
       setIsWidthFitted(false);
     }
   }, [layoutMode, scale, isWidthFitted]);
+
+  const handleWheel = useCallback((e: React.WheelEvent) => {
+    if (layoutMode === 'horizontal' && isWidthFitted && imageRef.current && containerRef.current) {
+      e.preventDefault();
+      const imgRect = imageRef.current.getBoundingClientRect();
+      const containerRect = containerRef.current.getBoundingClientRect();
+      
+      // 只有当图片高度大于容器高度时才允许滚动
+      if (imgRect.height > containerRect.height) {
+        const deltaY = e.deltaY;
+        const maxY = Math.max(0, (imgRect.height - containerRect.height) / 2);
+        
+        // 计算新的Y位置
+        let newY = position.y - deltaY;
+        
+        // 限制垂直滚动范围
+        newY = Math.min(Math.max(newY, -maxY), maxY);
+        
+        setPosition(prev => ({ ...prev, y: newY }));
+      }
+    }
+  }, [layoutMode, isWidthFitted, position.y]);
 
   const renderToolbar = () => (
     <div className={styles.toolbar}>
@@ -320,6 +352,7 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
         onMouseDown={isCurrent && isImage ? handleMouseDown : undefined}
         onMouseMove={isCurrent && isImage ? handleMouseMove : undefined}
         onMouseUp={isCurrent && isImage ? handleMouseUp : undefined}
+        onWheel={isCurrent && isImage ? handleWheel : undefined}
       >
         {isImage ? (
           <img
