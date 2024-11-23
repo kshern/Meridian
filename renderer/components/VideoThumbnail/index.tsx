@@ -18,9 +18,10 @@ const thumbnailQueue = new LoadQueue(10, async (path: string) => {
 interface VideoThumbnailProps {
   videoPath: string;
   className?: string;
+  showTag?: boolean;
 }
 
-const VideoThumbnail: React.FC<VideoThumbnailProps> = React.memo(({ videoPath, className }) => {
+const VideoThumbnail: React.FC<VideoThumbnailProps> = React.memo(({ videoPath, className, showTag = true }) => {
   const [thumbnailPath, setThumbnailPath] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -124,14 +125,18 @@ const VideoThumbnail: React.FC<VideoThumbnailProps> = React.memo(({ videoPath, c
   return (
     <div ref={thumbnailRef} className="relative w-full h-full">
       <LazyImage src={thumbnailPath} alt="Video thumbnail" className={className} />
-      <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
-        <div className="w-12 h-12 rounded-full bg-black/50 flex items-center justify-center">
-          <PlayIcon className="w-8 h-8 text-white" />
-        </div>
-      </div>
-      <div className="absolute top-2 right-2 px-2 py-1 bg-black/50 rounded text-xs text-white/90">
-        Video
-      </div>
+      {showTag && (
+        <>
+          <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
+            <div className="w-12 h-12 rounded-full bg-black/50 flex items-center justify-center">
+              <PlayIcon className="w-8 h-8 text-white" />
+            </div>
+          </div>
+          <div className="absolute top-2 right-2 px-2 py-1 bg-black/50 rounded text-xs text-white/90">
+            Video
+          </div>
+        </>
+      )}
     </div>
   );
 });

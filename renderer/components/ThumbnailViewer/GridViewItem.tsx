@@ -2,6 +2,7 @@ import React from 'react';
 import { MediaFile } from '../../../main/fileUtils';
 import LazyImage from '../LazyImage';
 import VideoThumbnail from '../VideoThumbnail';
+import FolderThumbnail from './FolderThumbnail';
 
 interface GridItemProps {
   file: MediaFile;
@@ -23,7 +24,13 @@ const GridItem: React.FC<GridItemProps> = React.memo(({ file, onDirectoryClick, 
     }}
     title={file.name}
   >
-    {file.type === 'image' ? (
+    {file.type === 'directory' ? (
+      <FolderThumbnail
+        folderPath={file.path}
+        className="w-full h-full"
+        getFileIcon={getFileIcon}
+      />
+    ) : file.type === 'image' ? (
       file.name.toLowerCase().endsWith('.gif') || file.name.toLowerCase().endsWith('.webp') ? (
         <img
           src={`file://${file.path}`}
@@ -40,6 +47,7 @@ const GridItem: React.FC<GridItemProps> = React.memo(({ file, onDirectoryClick, 
     ) : file.type === 'video' ? (
       <VideoThumbnail
         videoPath={file.path}
+        showTag={true}
         className="w-full h-full object-cover"
       />
     ) : (
