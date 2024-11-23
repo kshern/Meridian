@@ -58,12 +58,23 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
       if (layoutMode === 'horizontal') {
+        const currentFile = files[currentIndex];
+        const video = currentItemRef.current?.querySelector('video');
+        
         switch (event.key) {
           case 'ArrowLeft':
-            handlePrevious();
+            if (currentFile.type === 'video' && video) {
+              video.currentTime = Math.max(0, video.currentTime - 10);
+            } else {
+              handlePrevious();
+            }
             break;
           case 'ArrowRight':
-            handleNext();
+            if (currentFile.type === 'video' && video) {
+              video.currentTime = Math.min(video.duration, video.currentTime + 10);
+            } else {
+              handleNext();
+            }
             break;
         }
       }
@@ -376,7 +387,7 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
       <div className={styles.file_counter}>
         {currentIndex + 1} / {files.length}
       </div>
-      <div className={styles.controls}>
+      <div className={styles.top_controls}>
         {layoutMode === 'horizontal' && (
           <>
           <button
