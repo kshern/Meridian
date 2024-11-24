@@ -19,6 +19,7 @@ import {
   SpeakerXMarkIcon,
 } from '@heroicons/react/24/outline';
 import styles from './index.module.scss';
+import { useVolume } from '../../hooks/useVolume';
 
 interface MediaViewerProps {
   files: MediaFile[];
@@ -39,8 +40,7 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
   // 新增视频控制状态
   const [playingStates, setPlayingStates] = useState<{ [key: number]: boolean }>({});
   const [playbackRate, setPlaybackRate] = useState(1);
-  const [volume, setVolume] = useState(1);
-  const [isMuted, setIsMuted] = useState(false);
+  const { volume, muted, saveVolume, saveMuted } = useVolume();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [played, setPlayed] = useState(0);
   const [seeking, setSeeking] = useState(false);
@@ -300,16 +300,16 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
   };
 
   const handleVolumeChange = (value: number) => {
-    setVolume(value);
+    saveVolume(value);
     if (value === 0) {
-      setIsMuted(true);
+      saveMuted(true);
     } else {
-      setIsMuted(false);
+      saveMuted(false);
     }
   };
 
   const handleToggleMute = () => {
-    setIsMuted(!isMuted);
+    saveMuted(!muted);
   };
 
   const handleToggleFullscreen = () => {
@@ -490,7 +490,7 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
                 playing={isPlaying}
                 playbackRate={playbackRate}
                 volume={volume}
-                muted={isMuted}
+                muted={muted}
                 style={{ maxHeight: '100%', aspectRatio }}
                 onProgress={isCurrent ? handleProgress : undefined}
                 onError={(error) => {
@@ -556,7 +556,7 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
 
                 <div className={styles.volume_control}>
                   <button onClick={handleToggleMute}>
-                    {isMuted || volume === 0 ? (
+                    {muted || volume === 0 ? (
                       <SpeakerXMarkIcon className="w-5 h-5" />
                     ) : (
                       <SpeakerWaveIcon className="w-5 h-5" />

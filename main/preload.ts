@@ -27,6 +27,10 @@ interface FileAPI {
   getTheme(): Promise<string>;
   saveTheme(theme: string): Promise<void>;
   getVideoThumbnail(path: string): Promise<string>;
+  getVolume(): Promise<number>;
+  saveVolume(volume: number): Promise<void>;
+  getMuted(): Promise<boolean>;
+  saveMuted(muted: boolean): Promise<void>;
 }
 
 interface ElectronAPI {
@@ -101,6 +105,18 @@ const handler: FileAPI = {
   },
   async saveTheme(theme: string) {
     return ipcRenderer.invoke('saveTheme', theme);
+  },
+  async getVolume() {
+    return ipcRenderer.invoke('getVolume');
+  },
+  async saveVolume(volume: number) {
+    return ipcRenderer.invoke('saveVolume', volume);
+  },
+  async getMuted() {
+    return ipcRenderer.invoke('getMuted');
+  },
+  async saveMuted(muted: boolean) {
+    return ipcRenderer.invoke('saveMuted', muted);
   },
   async getVideoThumbnail(path: string) {
     return ipcRenderer.invoke('get-video-thumbnail', path);
