@@ -105,6 +105,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
                 onClick={onTogglePlay}
             >
                 <ReactPlayer
+                    key={path}
                     ref={playerRef}
                     url={`file://${path}`}
                     playing={isPlaying}

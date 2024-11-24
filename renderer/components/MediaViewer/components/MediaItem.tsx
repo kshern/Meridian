@@ -83,6 +83,25 @@ const MediaItem = memo(forwardRef<HTMLImageElement, MediaItemProps>(({
         setVideoError(null);
     }, [index]);
 
+    useEffect(() => {
+        if (!isImage) {
+            // 重置所有状态
+            setPlayingStates({});
+            setPlayed(0);
+            setSeeking(false);
+            setVideoError(null);
+            setPlaybackRate(DEFAULT_PLAYBACK_RATE);
+            onPlayingChange?.(false);
+
+            // 重置视频元素
+            const video = document.querySelector('video');
+            if (video) {
+                video.currentTime = 0;
+                video.load(); // 强制重新加载视频
+            }
+        }
+    }, [currentIndex, isImage, onPlayingChange]);
+
     const handleProgress = useCallback((state: { played: number }) => {
         if (!seeking) {
             setPlayed(state.played);
