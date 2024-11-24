@@ -9,6 +9,7 @@ import FolderTree from '../components/FolderTree';
 import { useFileOperations } from '../hooks/useFileOperations';
 import { useSidebarResize } from '../hooks/useSidebarResize';
 import { useTheme } from '../hooks/useTheme';
+import { usePathBarVisibility } from '../hooks/usePathBarVisibility';
 
 function Home() {
   const {
@@ -34,32 +35,8 @@ function Home() {
   const { theme } = useTheme();
 
   const [showSidebar, setShowSidebar] = useState(true);
-  const [showPathBar, setShowPathBar] = useState(true);
+  const { isPathBarVisible, savePathBarVisibility } = usePathBarVisibility();
   const { sidebarWidth, isResizing, startResizing } = useSidebarResize();
-
-  // 初始化时从本地加载地址栏显示状态
-  useEffect(() => {
-    const loadPathBarState = async () => {
-      try {
-        const visible = await window.ipc.getPathBarVisible();
-        setShowPathBar(visible);
-      } catch (error) {
-        console.error('Error loading path bar state:', error);
-      }
-    };
-    loadPathBarState();
-  }, []);
-
-  // 切换地址栏显示状态
-  const handleTogglePathBar = async () => {
-    const newState = !showPathBar;
-    setShowPathBar(newState);
-    try {
-      await window.ipc.savePathBarVisible(newState);
-    } catch (error) {
-      console.error('Error saving path bar state:', error);
-    }
-  };
 
   // 过滤文件列表
   const filteredFiles = files.filter((file) => {
@@ -67,6 +44,11 @@ function Home() {
     const query = searchQuery.toLowerCase();
     return fileName.includes(query);
   });
+
+  // 切换地址栏显示状态
+  const handleTogglePathBar = () => {
+    savePathBarVisibility(!isPathBarVisible);
+  };
 
   return (
     <React.Fragment>
@@ -80,7 +62,7 @@ function Home() {
           viewMode={viewMode}
           viewType={viewType}
           showSidebar={showSidebar}
-          showPathBar={showPathBar}
+          showPathBar={isPathBarVisible}
           onOpenDirectory={handleOpenDirectory}
           onGoBack={handleBack}
           onSearchChange={setSearchQuery}
@@ -90,7 +72,7 @@ function Home() {
         />
 
         {/* 地址栏 */}
-        {showPathBar && (
+        {isPathBarVisible && (
           <PathBar
             currentPath={currentPath}
             onPathSegmentClick={handlePathSegmentClick}

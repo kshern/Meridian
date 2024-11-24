@@ -20,17 +20,7 @@ interface FileAPI {
   convertToSystemPath(path: string): string;
   getDrives(): Promise<string[]>;
   handleFileClick(file: MediaFile): Promise<void>;
-  saveSidebarWidth(width: number): Promise<void>;
-  getSidebarWidth(): Promise<number>;
-  savePathBarVisible(visible: boolean): Promise<void>;
-  getPathBarVisible(): Promise<boolean>;
-  getTheme(): Promise<string>;
-  saveTheme(theme: string): Promise<void>;
   getVideoThumbnail(path: string): Promise<string>;
-  getVolume(): Promise<number>;
-  saveVolume(volume: number): Promise<void>;
-  getMuted(): Promise<boolean>;
-  saveMuted(muted: boolean): Promise<void>;
 }
 
 interface ElectronAPI {
@@ -87,36 +77,6 @@ const handler: FileAPI = {
   },
   async handleFileClick(file: MediaFile) {
     return ipcRenderer.invoke('handle-file-click', file);
-  },
-  async saveSidebarWidth(width: number) {
-    return ipcRenderer.invoke('save-sidebar-width', width);
-  },
-  async getSidebarWidth() {
-    return ipcRenderer.invoke('get-sidebar-width');
-  },
-  async savePathBarVisible(visible: boolean) {
-    return ipcRenderer.invoke('save-pathbar-visible', visible);
-  },
-  async getPathBarVisible() {
-    return ipcRenderer.invoke('get-pathbar-visible');
-  },
-  async getTheme() {
-    return ipcRenderer.invoke('getTheme');
-  },
-  async saveTheme(theme: string) {
-    return ipcRenderer.invoke('saveTheme', theme);
-  },
-  async getVolume() {
-    return ipcRenderer.invoke('getVolume');
-  },
-  async saveVolume(volume: number) {
-    return ipcRenderer.invoke('saveVolume', volume);
-  },
-  async getMuted() {
-    return ipcRenderer.invoke('getMuted');
-  },
-  async saveMuted(muted: boolean) {
-    return ipcRenderer.invoke('saveMuted', muted);
   },
   async getVideoThumbnail(path: string) {
     return ipcRenderer.invoke('get-video-thumbnail', path);

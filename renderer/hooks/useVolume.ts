@@ -6,6 +6,9 @@ type VolumeState = {
   muted: boolean;
 };
 
+const VOLUME_KEY = 'meridian_volume';
+const MUTED_KEY = 'meridian_muted';
+
 let volumeCache: VolumeState | null = null;
 let isLoadingVolume = false;
 const volumeListener = new EventEmitter();
@@ -32,11 +35,11 @@ export const useVolume = () => {
     } else {
       isLoadingVolume = true;
       try {
-        const savedVolume = await window.ipc.getVolume();
-        const savedMuted = await window.ipc.getMuted();
+        const savedVolume = localStorage.getItem(VOLUME_KEY);
+        const savedMuted = localStorage.getItem(MUTED_KEY);
         const finalState = {
-          volume: savedVolume,
-          muted: savedMuted
+          volume: savedVolume ? parseFloat(savedVolume) : 1,
+          muted: savedMuted ? savedMuted === 'true' : false
         };
         
         handler(finalState);
@@ -53,7 +56,7 @@ export const useVolume = () => {
 
   const saveVolume = useCallback(async (newVolume: number) => {
     try {
-      await window.ipc.saveVolume(newVolume);
+      localStorage.setItem(VOLUME_KEY, newVolume.toString());
       volumeCache = { ...volumeCache!, volume: newVolume };
       volumeListener.emit(VolumeEvent.__SET_VOLUME__, volumeCache);
       setVolume(newVolume);
@@ -64,7 +67,7 @@ export const useVolume = () => {
 
   const saveMuted = useCallback(async (newMuted: boolean) => {
     try {
-      await window.ipc.saveMuted(newMuted);
+      localStorage.setItem(MUTED_KEY, newMuted.toString());
       volumeCache = { ...volumeCache!, muted: newMuted };
       volumeListener.emit(VolumeEvent.__SET_VOLUME__, volumeCache);
       setMuted(newMuted);

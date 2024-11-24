@@ -47,7 +47,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
   onToggleSidebar,
   onTogglePathBar
 }) => {
-  const { theme, toggleTheme } = useTheme();
+  const { theme, saveTheme } = useTheme();
   const isDark = theme === 'dark';
   console.log('theme',theme);
   
@@ -150,7 +150,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
 
         {/* 主题切换按钮 */}
         <button
-          onClick={toggleTheme}
+          onClick={() => saveTheme(isDark ? 'light' : 'dark')}
           className={`${buttonBaseClasses} ${buttonInactiveClasses}`}
           title={isDark ? "切换到亮色模式" : "切换到暗色模式"}
         >

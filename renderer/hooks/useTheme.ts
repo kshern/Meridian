@@ -105,21 +105,22 @@ const themeColors: Record<Theme, ThemeColors> = {
     
     overlay: 'bg-black/60',
     overlayHover: 'hover:bg-black/70',
-  },
+  }
 };
 
-enum ThemeEvent {
-  __SET_THEME__ = '__SET_THEME__',
-  __SET_THEME_RSP__ = '__SET_THEME_RSP__'
-}
-
-const themeListener = new EventEmitter();
+const THEME_KEY = 'meridian_theme';
 let themeCache: Theme | null = null;
 let isLoadingTheme = false;
+const themeListener = new EventEmitter();
+
+enum ThemeEvent {
+  __SET_THEME__ = 'SET_THEME',
+  __SET_THEME_RSP__ = 'SET_THEME_RSP',
+}
 
 export const useTheme = () => {
-  const [theme, setTheme] = useState<Theme>(themeCache || 'light');
-  const colors = themeColors[theme];
+  const [theme, setTheme] = useState<Theme>((themeCache as Theme) || 'light');
+  const [colors, setColors] = useState<ThemeColors>(themeColors[theme]);
 
   const getTheme = useCallback(async () => {
     const handler = (newTheme: Theme) => {
@@ -134,11 +135,10 @@ export const useTheme = () => {
     } else {
       isLoadingTheme = true;
       try {
-        const savedTheme = await window.ipc.getTheme();
-        const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-        const finalTheme = savedTheme || systemTheme;
+        const savedTheme = localStorage.getItem(THEME_KEY);
+        const finalTheme = (savedTheme as Theme) || 'light';
         
-        handler(finalTheme as Theme);
+        handler(finalTheme);
         themeListener.emit(ThemeEvent.__SET_THEME_RSP__, finalTheme);
       } catch (error) {
         console.error('Failed to load theme:', error);
@@ -150,21 +150,22 @@ export const useTheme = () => {
     }
   }, []);
 
-  const toggleTheme = useCallback(async () => {
-    const newTheme = theme === 'light' ? 'dark' : 'light';
+  const saveTheme = useCallback(async (newTheme: Theme) => {
     try {
-      await window.ipc.saveTheme(newTheme);
+      localStorage.setItem(THEME_KEY, newTheme);
       themeCache = newTheme;
       themeListener.emit(ThemeEvent.__SET_THEME__, newTheme);
       setTheme(newTheme);
+      setColors(themeColors[newTheme]);
     } catch (error) {
       console.error('Failed to save theme:', error);
     }
-  }, [theme]);
+  }, []);
 
   useEffect(() => {
     const handler = (newTheme: Theme) => {
       setTheme(newTheme);
+      setColors(themeColors[newTheme]);
     };
 
     themeListener.on(ThemeEvent.__SET_THEME__, handler);
@@ -175,7 +176,7 @@ export const useTheme = () => {
     };
   }, [getTheme]);
 
-  return { theme, colors, toggleTheme };
+  return { theme, colors, saveTheme };
 };
 
 export default useTheme;

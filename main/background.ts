@@ -12,11 +12,6 @@ import { generateThumbnail } from './thumbnailGenerator';
 const store = new Store({
   name: 'freader-settings',
   defaults: {
-    theme: null,
-    sidebarWidth: 280,
-    pathBarVisible: true,
-    volume: 1,
-    muted: false
   }
 });
 
@@ -182,69 +177,6 @@ const registerIpcHandlers = () => {
     } catch (error) {
       log.error('Error getting path bar state:', error);
       return true; // 默认显示
-    }
-  });
-
-  // 保存主题设置
-  ipcMain.handle('getTheme', async () => {
-    try {
-      return store.get('theme', null);
-    } catch (error) {
-      log.error('Error getting theme:', error);
-      throw error;
-    }
-  });
-
-  // 获取主题设置
-  ipcMain.handle('saveTheme', async (_, theme: string) => {
-    try {
-      store.set('theme', theme);
-      return true;
-    } catch (error) {
-      log.error('Error saving theme:', error);
-      throw error;
-    }
-  });
-
-  // 保存音量设置
-  ipcMain.handle('saveVolume', async (_, volume: number) => {
-    try {
-      store.set('volume', volume);
-      return true;
-    } catch (error) {
-      log.error('Error saving volume:', error);
-      throw error;
-    }
-  });
-
-  // 获取音量设置
-  ipcMain.handle('getVolume', async () => {
-    try {
-      return store.get('volume', 1);
-    } catch (error) {
-      log.error('Error getting volume:', error);
-      return 1; // 默认音量为 1
-    }
-  });
-
-  // 保存静音状态
-  ipcMain.handle('saveMuted', async (_, muted: boolean) => {
-    try {
-      store.set('muted', muted);
-      return true;
-    } catch (error) {
-      log.error('Error saving muted state:', error);
-      throw error;
-    }
-  });
-
-  // 获取静音状态
-  ipcMain.handle('getMuted', async () => {
-    try {
-      return store.get('muted', false);
-    } catch (error) {
-      log.error('Error getting muted state:', error);
-      return false; // 默认非静音
     }
   });
 
