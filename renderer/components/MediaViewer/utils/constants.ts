@@ -44,4 +44,5 @@ export const VIDEO_SEEK_TIME = 10;
 export const KEY_CODES = {
     LEFT_ARROW: 'ArrowLeft',
     RIGHT_ARROW: 'ArrowRight',
+    SPACE: 'Space',
 } as const;

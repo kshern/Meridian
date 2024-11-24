@@ -3,7 +3,12 @@ import { PlayIcon } from '@heroicons/react/24/solid';
 import ReactPlayer from 'react-player';
 import styles from './MediaItem.module.scss';
 import { VideoControls } from './VideoControls';
-import { CSS_CLASSES, PROGRESS_INTERVAL, KEY_CODES, VIDEO_SEEK_TIME } from '../utils/constants';
+import { 
+    CSS_CLASSES, 
+    PROGRESS_INTERVAL, 
+    KEY_CODES, 
+    VIDEO_SEEK_TIME 
+} from '../utils/constants';
 
 interface VideoPlayerProps {
     path: string;
@@ -14,6 +19,8 @@ interface VideoPlayerProps {
     played: number;
     isFullscreen: boolean;
     videoError: string | null;
+    scale: number;
+    position: { x: number; y: number };
     onProgress: (state: { played: number }) => void;
     onError: (error: any) => void;
     onTogglePlay: () => void;
@@ -26,6 +33,9 @@ interface VideoPlayerProps {
     onToggleFullscreen: () => void;
     getCurrentTime: () => string;
     isCurrent: boolean;
+    handleMouseDown?: (e: React.MouseEvent) => void;
+    handleMouseMove?: (e: React.MouseEvent) => void;
+    handleMouseUp?: (e: React.MouseEvent) => void;
 }
 
 const VideoPlayer: React.FC<VideoPlayerProps> = ({
@@ -37,6 +47,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     played,
     isFullscreen,
     videoError,
+    scale,
+    position,
     onProgress,
     onError,
     onTogglePlay,
@@ -49,6 +61,9 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     onToggleFullscreen,
     getCurrentTime,
     isCurrent,
+    handleMouseDown,
+    handleMouseMove,
+    handleMouseUp,
 }) => {
     const playerRef = useRef<ReactPlayer>(null);
     const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -72,6 +87,10 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         const duration = video.duration;
 
         switch (e.code) {
+            case KEY_CODES.SPACE:
+                e.preventDefault();
+                onTogglePlay();
+                break;
             case KEY_CODES.LEFT_ARROW:
                 if (isPlaying) {
                     e.preventDefault();
@@ -89,7 +108,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
                 }
                 break;
         }
-    }, [isPlaying, isCurrent, onSeekChange]);
+    }, [isPlaying, isCurrent, onSeekChange, onTogglePlay]);
 
     useEffect(() => {
         window.addEventListener('keydown', handleKeyDown);
@@ -102,7 +121,11 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         <div className={`${styles.media_container} ${!isPlaying ? CSS_CLASSES.PAUSED : ''}`}>
             <div
                 className={styles.video_wrapper}
-                onClick={onTogglePlay}
+                style={{
+                    transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
+                    cursor: scale > 1 ? 'grab' : 'default',
+                    userSelect: 'none'
+                }}
             >
                 <ReactPlayer
                     key={path}
@@ -113,7 +136,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
                     playbackRate={playbackRate}
                     volume={volume}
                     muted={muted}
-                    style={{ maxHeight: '100%' }}
+                    style={{ maxHeight: '100%', pointerEvents: 'none' }}
                     onProgress={onProgress}
                     onError={onError}
                     progressInterval={PROGRESS_INTERVAL}

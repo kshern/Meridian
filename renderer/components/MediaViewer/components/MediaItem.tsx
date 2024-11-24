@@ -53,7 +53,6 @@ const MediaItem = memo(forwardRef<HTMLImageElement, MediaItemProps>(({
     handleMouseMove,
     handleMouseUp,
     onPlayingChange,
-    layoutMode,
 }, ref) => {
     const isImage = file.type === MEDIA_TYPES.IMAGE;
     const isCurrent = index === currentIndex;
@@ -64,17 +63,21 @@ const MediaItem = memo(forwardRef<HTMLImageElement, MediaItemProps>(({
     const [playbackRate, setPlaybackRate] = useState(DEFAULT_PLAYBACK_RATE);
     const [playingStates, setPlayingStates] = useState<{ [key: number]: boolean }>({});
     const { volume, muted, saveVolume, saveMuted } = useVolume();
+    const [mediaScale, setScale] = useState(scale);
+    const [isDraggingMedia, setIsDraggingMedia] = useState(false);
+    const [dragStartPos, setDragStartPos] = useState({ x: 0, y: 0 });
+    const [mediaPosition, setMediaPosition] = useState(position);
     const isPlaying = playingStates[index] || false;
 
     const imageClasses = [
-        isDragging && CSS_CLASSES.DRAGGING,
+        isDraggingMedia && CSS_CLASSES.DRAGGING,
         rotation !== 0 && CSS_CLASSES.ROTATING
     ].filter(Boolean).join(' ');
 
     const mediaStyle = {
         transform: `
-            translate(${position.x}px, ${position.y}px)
-            scale(${scale})
+            translate(${mediaPosition.x}px, ${mediaPosition.y}px)
+            scale(${mediaScale})
             rotate(${rotation}deg)
         `,
     };
@@ -91,13 +94,15 @@ const MediaItem = memo(forwardRef<HTMLImageElement, MediaItemProps>(({
             setSeeking(false);
             setVideoError(null);
             setPlaybackRate(DEFAULT_PLAYBACK_RATE);
+            setScale(1);
+            setMediaPosition({ x: 0, y: 0 });
             onPlayingChange?.(false);
 
             // 重置视频元素
             const video = document.querySelector('video');
             if (video) {
                 video.currentTime = 0;
-                video.load(); // 强制重新加载视频
+                video.load();
             }
         }
     }, [currentIndex, isImage, onPlayingChange]);
@@ -145,13 +150,82 @@ const MediaItem = memo(forwardRef<HTMLImageElement, MediaItemProps>(({
         saveMuted(!muted);
     };
 
+    const handleWheel = useCallback((e: WheelEvent) => {
+        e.preventDefault();
+        if (isCurrent) {
+            const delta = e.deltaY;
+            const scaleChange = delta > 0 ? 0.9 : 1.1; // 缩小或放大10%
+            const newScale = mediaScale * scaleChange;
+
+            // 限制缩放范围在0.1到5之间
+            if (newScale >= 0.1 && newScale <= 5) {
+                setScale(newScale);
+            }
+        }
+    }, [isCurrent, mediaScale]);
+
+    useEffect(() => {
+        const element = document.querySelector(`.${styles.media_item}[data-index="${index}"]`);
+        if (element) {
+            element.addEventListener('wheel', handleWheel, { passive: false });
+            return () => {
+                element.removeEventListener('wheel', handleWheel);
+            };
+        }
+    }, [handleWheel, index]);
+
+    const handleMediaMouseDown = useCallback((e: React.MouseEvent) => {
+        if (isCurrent && mediaScale > 1) {
+            e.preventDefault();
+            setIsDraggingMedia(true);
+            setDragStartPos({ 
+                x: e.clientX - mediaPosition.x, 
+                y: e.clientY - mediaPosition.y 
+            });
+        }
+    }, [isCurrent, mediaScale, mediaPosition]);
+
+    const handleMediaMouseMove = useCallback((e: React.MouseEvent) => {
+        if (isDraggingMedia && mediaScale > 1) {
+            e.preventDefault();
+            const newX = e.clientX - dragStartPos.x;
+            const newY = e.clientY - dragStartPos.y;
+
+            // 获取容器和媒体元素
+            const container = document.querySelector(`.${styles.media_item}[data-index="${index}"]`);
+            const media = container?.querySelector('video, img');
+            
+            if (container && media) {
+                const containerRect = container.getBoundingClientRect();
+                const mediaRect = media.getBoundingClientRect();
+
+                const scaledWidth = mediaRect.width;
+                const scaledHeight = mediaRect.height;
+
+                const maxX = Math.max(0, (scaledWidth - containerRect.width) / 2);
+                const maxY = Math.max(0, (scaledHeight - containerRect.height) / 2);
+
+                // 限制拖动范围
+                const boundedX = Math.min(Math.max(newX, -maxX), maxX);
+                const boundedY = Math.min(Math.max(newY, -maxY), maxY);
+
+                setMediaPosition({ x: boundedX, y: boundedY });
+            }
+        }
+    }, [isDraggingMedia, mediaScale, dragStartPos, index]);
+
+    const handleMediaMouseUp = useCallback(() => {
+        setIsDraggingMedia(false);
+    }, []);
+
     return (
         <div
             className={`${styles.media_item} ${isCurrent ? CSS_CLASSES.CURRENT : ''}`}
             data-index={index}
-            onMouseDown={isCurrent && isImage && handleMouseDown ? handleMouseDown : undefined}
-            onMouseMove={isCurrent && isImage && handleMouseMove ? handleMouseMove : undefined}
-            onMouseUp={isCurrent && isImage && handleMouseUp ? handleMouseUp : undefined}
+            onMouseDown={handleMediaMouseDown}
+            onMouseMove={handleMediaMouseMove}
+            onMouseUp={handleMediaMouseUp}
+            onMouseLeave={handleMediaMouseUp}
         >
             <Suspense fallback={<LoadingFallback />}>
                 {isImage ? (
@@ -172,6 +246,8 @@ const MediaItem = memo(forwardRef<HTMLImageElement, MediaItemProps>(({
                         played={played}
                         isFullscreen={isFullscreen}
                         videoError={videoError}
+                        scale={mediaScale}
+                        position={mediaPosition}
                         onProgress={handleProgress}
                         onError={(error) => {
                             console.error('Video playback error:', error);
@@ -187,6 +263,9 @@ const MediaItem = memo(forwardRef<HTMLImageElement, MediaItemProps>(({
                         onToggleFullscreen={handleToggleFullscreen}
                         getCurrentTime={getCurrentVideoTime}
                         isCurrent={isCurrent}
+                        handleMouseDown={isCurrent ? handleMouseDown : undefined}
+                        handleMouseMove={isCurrent ? handleMouseMove : undefined}
+                        handleMouseUp={isCurrent ? handleMouseUp : undefined}
                     />
                 )}
             </Suspense>
