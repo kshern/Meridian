@@ -35,9 +35,6 @@ interface MediaItemProps {
     scale: number;
     position: { x: number; y: number };
     layoutMode?: string;
-    handleMouseDown?: (e: React.MouseEvent) => void;
-    handleMouseMove?: (e: React.MouseEvent) => void;
-    handleMouseUp?: (e: React.MouseEvent) => void;
     onPlayingChange?: (isPlaying: boolean) => void;
 }
 
@@ -49,10 +46,8 @@ const MediaItem = memo(forwardRef<HTMLImageElement, MediaItemProps>(({
     rotation,
     scale,
     position,
-    handleMouseDown,
-    handleMouseMove,
-    handleMouseUp,
     onPlayingChange,
+    layoutMode,
 }, ref) => {
     const isImage = file.type === MEDIA_TYPES.IMAGE;
     const isCurrent = index === currentIndex;
@@ -73,7 +68,9 @@ const MediaItem = memo(forwardRef<HTMLImageElement, MediaItemProps>(({
         isDraggingMedia && CSS_CLASSES.DRAGGING,
         rotation !== 0 && CSS_CLASSES.ROTATING
     ].filter(Boolean).join(' ');
-
+    useEffect(() => {
+        setScale(scale);
+    }, [scale]);
     const mediaStyle = {
         transform: `
             translate(${mediaPosition.x}px, ${mediaPosition.y}px)
@@ -151,8 +148,9 @@ const MediaItem = memo(forwardRef<HTMLImageElement, MediaItemProps>(({
     };
 
     const handleWheel = useCallback((e: WheelEvent) => {
-        e.preventDefault();
-        if (isCurrent) {
+        // 只在网格模式下处理缩放
+        if (layoutMode !== 'vertical' && isCurrent) {
+            e.preventDefault();
             const delta = e.deltaY;
             const scaleChange = delta > 0 ? 0.9 : 1.1; // 缩小或放大10%
             const newScale = mediaScale * scaleChange;
@@ -162,7 +160,7 @@ const MediaItem = memo(forwardRef<HTMLImageElement, MediaItemProps>(({
                 setScale(newScale);
             }
         }
-    }, [isCurrent, mediaScale]);
+    }, [layoutMode, isCurrent, mediaScale]);
 
     useEffect(() => {
         const element = document.querySelector(`.${styles.media_item}[data-index="${index}"]`);
@@ -244,7 +242,6 @@ const MediaItem = memo(forwardRef<HTMLImageElement, MediaItemProps>(({
                         volume={volume}
                         muted={muted}
                         played={played}
-                        isFullscreen={isFullscreen}
                         videoError={videoError}
                         scale={mediaScale}
                         position={mediaPosition}
@@ -263,9 +260,6 @@ const MediaItem = memo(forwardRef<HTMLImageElement, MediaItemProps>(({
                         onToggleFullscreen={handleToggleFullscreen}
                         getCurrentTime={getCurrentVideoTime}
                         isCurrent={isCurrent}
-                        handleMouseDown={isCurrent ? handleMouseDown : undefined}
-                        handleMouseMove={isCurrent ? handleMouseMove : undefined}
-                        handleMouseUp={isCurrent ? handleMouseUp : undefined}
                     />
                 )}
             </Suspense>

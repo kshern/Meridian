@@ -17,7 +17,6 @@ interface VideoPlayerProps {
     volume: number;
     muted: boolean;
     played: number;
-    isFullscreen: boolean;
     videoError: string | null;
     scale: number;
     position: { x: number; y: number };
@@ -33,9 +32,6 @@ interface VideoPlayerProps {
     onToggleFullscreen: () => void;
     getCurrentTime: () => string;
     isCurrent: boolean;
-    handleMouseDown?: (e: React.MouseEvent) => void;
-    handleMouseMove?: (e: React.MouseEvent) => void;
-    handleMouseUp?: (e: React.MouseEvent) => void;
 }
 
 const VideoPlayer: React.FC<VideoPlayerProps> = ({
@@ -45,7 +41,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     volume,
     muted,
     played,
-    isFullscreen,
     videoError,
     scale,
     position,
@@ -61,9 +56,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     onToggleFullscreen,
     getCurrentTime,
     isCurrent,
-    handleMouseDown,
-    handleMouseMove,
-    handleMouseUp,
 }) => {
     const playerRef = useRef<ReactPlayer>(null);
     const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -173,7 +165,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
                     volume={volume}
                     muted={muted}
                     playbackRate={playbackRate}
-                    isFullscreen={isFullscreen}
                     getCurrentTime={getCurrentTime}
                     onPlayToggle={onTogglePlay}
                     onSeekMouseDown={onSeekMouseDown}

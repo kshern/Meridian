@@ -16,7 +16,6 @@ interface VideoControlsProps {
     volume: number;
     muted: boolean;
     playbackRate: number;
-    isFullscreen: boolean;
     getCurrentTime: () => string;
     onPlayToggle: () => void;
     onSeekMouseDown: () => void;
@@ -35,7 +34,6 @@ export const VideoControls: React.FC<VideoControlsProps> = ({
     volume,
     muted,
     playbackRate,
-    isFullscreen,
     getCurrentTime,
     onPlayToggle,
     onSeekMouseDown,

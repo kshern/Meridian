@@ -73,54 +73,6 @@ export const HorizontalViewer: React.FC<MediaViewerBaseProps & { onPlayingChange
         };
     }, [isWidthFitted, position.y, scale]);
 
-    const handleMouseDown = useCallback((e: React.MouseEvent) => {
-        if (scale > 1 && imageRef.current && containerRef.current) {
-            const imgRect = imageRef.current.getBoundingClientRect();
-            const containerRect = containerRef.current.getBoundingClientRect();
-
-            const canDragX = imgRect.width > containerRect.width;
-            const canDragY = imgRect.height > containerRect.height;
-
-            if (canDragX || canDragY) {
-                setIsDragging(true);
-                setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y });
-            }
-        }
-    }, [scale, position]);
-
-    const handleMouseMove = useCallback((e: React.MouseEvent) => {
-        if (isDragging && scale > 1 && imageRef.current && containerRef.current) {
-            const imgRect = imageRef.current.getBoundingClientRect();
-            const containerRect = containerRef.current.getBoundingClientRect();
-
-            let newX = e.clientX - dragStart.x;
-            let newY = e.clientY - dragStart.y;
-
-            const scaledWidth = imgRect.width;
-            const scaledHeight = imgRect.height;
-
-            const maxX = Math.max(0, (scaledWidth - containerRect.width) / 2);
-            const maxY = Math.max(0, (scaledHeight - containerRect.height) / 2);
-
-            if (scaledWidth > containerRect.width) {
-                newX = Math.min(Math.max(newX, -maxX), maxX);
-            } else {
-                newX = 0;
-            }
-
-            if (scaledHeight > containerRect.height) {
-                newY = Math.min(Math.max(newY, -maxY), maxY);
-            } else {
-                newY = 0;
-            }
-
-            setPosition({ x: newX, y: newY });
-        }
-    }, [isDragging, scale, dragStart]);
-
-    const handleMouseUp = useCallback(() => {
-        setIsDragging(false);
-    }, []);
 
     const handleRotate = useCallback(() => {
         setRotation(prev => (prev + 90) % 360);
@@ -237,9 +189,6 @@ export const HorizontalViewer: React.FC<MediaViewerBaseProps & { onPlayingChange
                 scale={scale}
                 position={position}
                 layoutMode="horizontal"
-                handleMouseDown={handleMouseDown}
-                handleMouseMove={handleMouseMove}
-                handleMouseUp={handleMouseUp}
                 onPlayingChange={onPlayingChange}
             />
         </div>
