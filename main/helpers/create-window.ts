@@ -77,6 +77,7 @@ export const createWindow = (
       nodeIntegration: true,
       nodeIntegrationInWorker: true,
       contextIsolation: true,
+      webSecurity: false,  // 允许加载本地资源
       ...options.webPreferences,
     },
   })
