@@ -45,6 +45,7 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
   const [played, setPlayed] = useState(0);
   const [seeking, setSeeking] = useState(false);
   const [aspectRatio, setAspectRatio] = useState('16:9');
+  const [videoError, setVideoError] = useState<{ [key: number]: string }>({});
   const observerRef = useRef<IntersectionObserver | null>(null);
   const mediaRefs = useRef<Map<number, HTMLDivElement>>(new Map());
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -492,6 +493,13 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
                 muted={isMuted}
                 style={{ maxHeight: '100%', aspectRatio }}
                 onProgress={isCurrent ? handleProgress : undefined}
+                onError={(error) => {
+                  console.error('Video playback error:', error);
+                  setVideoError(prev => ({
+                    ...prev,
+                    [index]: '无法播放此视频，可能是由于缺少所需的编解码器。请安装相应的编解码器后重试。'
+                  }));
+                }}
                 progressInterval={1000}
                 controls={false}
                 config={{
@@ -509,7 +517,12 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
                 }}
               />
             </div>
-            {!isPlaying && isCurrent && (
+            {videoError[index] && (
+              <div className={styles.error_message}>
+                {videoError[index]}
+              </div>
+            )}
+            {!isPlaying && isCurrent && !videoError[index] && (
               <div 
                 className={styles.center_play_button}
                 onClick={() => togglePlay(index)}
