@@ -1,6 +1,5 @@
 import React, { useState, useCallback, forwardRef, useEffect, memo, Suspense, lazy } from 'react';
 import styles from './MediaItem.module.scss';
-import { MediaItemProps } from '../types';
 import useVolume from '../../../hooks/useVolume';
 import { 
     CSS_CLASSES, 
@@ -15,6 +14,7 @@ import {
     updatePlayingStates,
     handleVolumeChange as handleVolumeChangeUtil
 } from '../utils/mediaUtils';
+import { MediaFile } from '@/main/fileUtils';
 
 // 懒加载组件
 const ImageViewer = lazy(() => import('./ImageViewer'));
@@ -34,6 +34,7 @@ interface MediaItemProps {
     rotation: number;
     scale: number;
     position: { x: number; y: number };
+    layoutMode?: string;
     handleMouseDown?: (e: React.MouseEvent) => void;
     handleMouseMove?: (e: React.MouseEvent) => void;
     handleMouseUp?: (e: React.MouseEvent) => void;
@@ -52,6 +53,7 @@ const MediaItem = memo(forwardRef<HTMLImageElement, MediaItemProps>(({
     handleMouseMove,
     handleMouseUp,
     onPlayingChange,
+    layoutMode,
 }, ref) => {
     const isImage = file.type === MEDIA_TYPES.IMAGE;
     const isCurrent = index === currentIndex;

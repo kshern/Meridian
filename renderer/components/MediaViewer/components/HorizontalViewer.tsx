@@ -34,17 +34,35 @@ export const HorizontalViewer: React.FC<MediaViewerBaseProps & { onPlayingChange
         if (!container) return;
 
         const handleWheel = (e: WheelEvent) => {
-            if (isWidthFitted && imageRef.current) {
-                const imgRect = imageRef.current.getBoundingClientRect();
-                const containerRect = container.getBoundingClientRect();
+            if (imageRef.current && containerRef.current) {
+                e.preventDefault();
+                const delta = e.deltaY;
+                const scaleChange = delta > 0 ? 0.9 : 1.1; // 缩小或放大10%
+                const newScale = scale * scaleChange;
 
-                if (imgRect.height > containerRect.height) {
-                    e.preventDefault();
-                    const deltaY = e.deltaY;
-                    const maxY = Math.max(0, (imgRect.height - containerRect.height) / 2);
-                    let newY = position.y - deltaY;
-                    newY = Math.min(Math.max(newY, -maxY), maxY);
-                    setPosition(prev => ({ ...prev, y: newY }));
+                // 获取图片和容器的尺寸
+                const img = imageRef.current;
+                const container = containerRef.current;
+                const containerRect = container.getBoundingClientRect();
+                const imgRect = img.getBoundingClientRect();
+
+                // 计算最小缩放比例，确保图片至少填满容器的宽度或高度
+                const minScaleWidth = containerRect.width / img.naturalWidth;
+                const minScaleHeight = containerRect.height / img.naturalHeight;
+                const minScale = Math.min(minScaleWidth, minScaleHeight);
+
+                // 限制缩放范围
+                if (newScale >= minScale && newScale <= 5) {
+                    // 计算新的尺寸
+                    const newWidth = img.naturalWidth * newScale;
+                    const newHeight = img.naturalHeight * newScale;
+
+                    // 计算新的位置，保持图片中心点不变
+                    const newX = newScale <= 1 ? 0 : Math.min(Math.max(position.x * scaleChange, -(newWidth - containerRect.width) / 2), (newWidth - containerRect.width) / 2);
+                    const newY = newScale <= 1 ? 0 : Math.min(Math.max(position.y * scaleChange, -(newHeight - containerRect.height) / 2), (newHeight - containerRect.height) / 2);
+
+                    setScale(newScale);
+                    setPosition({ x: newX, y: newY });
                 }
             }
         };
@@ -53,7 +71,7 @@ export const HorizontalViewer: React.FC<MediaViewerBaseProps & { onPlayingChange
         return () => {
             container.removeEventListener('wheel', handleWheel);
         };
-    }, [isWidthFitted, position.y]);
+    }, [isWidthFitted, position.y, scale]);
 
     const handleMouseDown = useCallback((e: React.MouseEvent) => {
         if (scale > 1 && imageRef.current && containerRef.current) {
