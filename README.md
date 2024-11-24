@@ -12,9 +12,13 @@
   - 支持多种图片格式 (jpg, jpeg, png, gif, webp)
   - 支持多种视频格式 (mp4, webm, mov)
   - 优化的 GIF 和 WebP 处理
+  - 图片和视频缩放功能
+  - 智能错误提示
 - 🎥 增强的视频播放功能
   - 支持键盘快捷键控制（10秒快进/快退）
   - 自定义播放控制
+  - 全局音量控制
+  - 优化的视频预览体验
 - 📂 文件管理功能
   - 可伸缩的文件树侧边栏
   - 支持文件过滤和媒体文件筛选
@@ -38,12 +42,12 @@
 
 1. 安装依赖：
 ```bash
-npm install
+yarn install
 ```
 
 2. 启动开发服务器：
 ```bash
-npm run dev
+yarn run dev
 ```
 
 这将同时启动 Next.js 开发服务器和 Electron 应用。
@@ -61,7 +65,7 @@ npm run dev
 
 构建生产版本：
 ```bash
-npm run build
+yarn run build
 ```
 
 这将创建一个可分发的应用程序包。
