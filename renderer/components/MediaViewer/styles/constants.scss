@@ -1,0 +1,30 @@
+// Colors
+$primary-color: #1890ff;
+$text-color: #ffffff;
+$background-dark: rgba(0, 0, 0, 0.7);
+$background-transparent: rgba(0, 0, 0, 0.2);
+$error-color: #ff4d4f;
+
+// Transitions
+$transition-duration: 0.3s;
+$transition-timing: ease;
+
+// Sizes
+$icon-size: 1.25rem;
+$large-icon-size: 4rem;
+$control-height: 2rem;
+$slider-height: 0.25rem;
+$slider-thumb-size: 0.75rem;
+$border-radius: 0.25rem;
+
+// Z-indexes
+$controls-z-index: 1000;
+$overlay-z-index: 100;
+
+// Gradients
+$controls-gradient: linear-gradient(transparent, $background-dark);
+$toolbar-gradient: linear-gradient(to bottom, $background-dark 20%, transparent);
+
+// Media Queries
+$mobile-width: 768px;
+$tablet-width: 1024px;

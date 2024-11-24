@@ -1,26 +1,10 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
-import ReactPlayer from 'react-player';
+import React, { useState, useEffect } from 'react';
 import { MediaFile } from '../../../main/fileUtils';
-import {
-  ArrowPathIcon,
-  ArrowsPointingInIcon,
-  ArrowsPointingOutIcon,
-  ArrowUturnLeftIcon,
-  MinusIcon,
-  PlusIcon,
-  PlusCircleIcon,
-  ViewColumnsIcon,
-  Squares2X2Icon,
-  ArrowsRightLeftIcon,
-  ArrowsUpDownIcon,
-  PlayIcon,
-  PauseIcon,
-  SpeakerWaveIcon,
-  SpeakerXMarkIcon,
-} from '@heroicons/react/24/outline';
+import { ArrowsRightLeftIcon, ArrowsUpDownIcon } from '@heroicons/react/24/outline';
 import styles from './index.module.scss';
 import { useVolume } from '../../hooks/useVolume';
-import MediaItem from './components/MediaItem';
+import { HorizontalViewer } from './components/HorizontalViewer';
+import { VerticalViewer } from './components/VerticalViewer';
 
 interface MediaViewerProps {
   files: MediaFile[];
@@ -32,26 +16,6 @@ type LayoutMode = 'horizontal' | 'vertical';
 const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) => {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [layoutMode, setLayoutMode] = useState<LayoutMode>('horizontal');
-  const [scale, setScale] = useState(1);
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [rotation, setRotation] = useState(0);
-  const [isWidthFitted, setIsWidthFitted] = useState(false);
-  // 新增视频控制状态
-  const [playingStates, setPlayingStates] = useState<{ [key: number]: boolean }>({});
-  const [playbackRate, setPlaybackRate] = useState(1);
-  const { volume, muted, saveVolume, saveMuted } = useVolume();
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [played, setPlayed] = useState(0);
-  const [seeking, setSeeking] = useState(false);
-  const [aspectRatio, setAspectRatio] = useState('16:9');
-  const [videoError, setVideoError] = useState<{ [key: number]: string }>({});
-  const observerRef = useRef<IntersectionObserver | null>(null);
-  const mediaRefs = useRef<Map<number, HTMLDivElement>>(new Map());
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const currentItemRef = useRef<HTMLDivElement | null>(null);
-  const imageRef = useRef<HTMLImageElement | null>(null);
 
   useEffect(() => {
     setCurrentIndex(initialIndex);
@@ -60,23 +24,12 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
       if (layoutMode === 'horizontal') {
-        const currentFile = files[currentIndex];
-        const video = currentItemRef.current?.querySelector('video');
-
         switch (event.key) {
           case 'ArrowLeft':
-            if (currentFile.type === 'video' && video) {
-              video.currentTime = Math.max(0, video.currentTime - 10);
-            } else {
-              handlePrevious();
-            }
+            handlePrevious();
             break;
           case 'ArrowRight':
-            if (currentFile.type === 'video' && video) {
-              video.currentTime = Math.min(video.duration, video.currentTime + 10);
-            } else {
-              handleNext();
-            }
+            handleNext();
             break;
         }
       }
@@ -84,127 +37,7 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [files, currentIndex, layoutMode]);
-
-  useEffect(() => {
-    if (layoutMode === 'vertical') {
-      // 确保在垂直模式下正确定位到当前index
-      requestAnimationFrame(() => {
-        const element = mediaRefs.current.get(currentIndex);
-        if (element) {
-          element.scrollIntoView({ behavior: 'instant', block: 'start' });
-        }
-      });
-
-      observerRef.current = new IntersectionObserver(
-        (entries) => {
-          // 使用节流来减少频繁更新
-          const visibleEntries = entries.filter(entry => entry.isIntersecting);
-          if (visibleEntries.length > 0) {
-            const mostVisible = visibleEntries.reduce((prev, current) => {
-              return prev.intersectionRatio > current.intersectionRatio ? prev : current;
-            });
-            const index = parseInt(mostVisible.target.getAttribute('data-index') || '0');
-            if (index >= 0 && index < files.length && index !== currentIndex) {
-              setCurrentIndex(index);
-            }
-          }
-        },
-        {
-          root: containerRef.current,
-          rootMargin: '0px',
-          threshold: [0, 0.25, 0.5, 0.75, 1],
-        }
-      );
-
-      // 延迟添加观察者，确保初始滚动已完成
-      const timer = setTimeout(() => {
-        mediaRefs.current.forEach((element) => {
-          if (observerRef.current) {
-            observerRef.current.observe(element);
-          }
-        });
-      }, 100);
-
-      return () => {
-        if (observerRef.current) {
-          observerRef.current.disconnect();
-        }
-        clearTimeout(timer);
-      };
-    }
-  }, [layoutMode, files.length]);
-
-  useEffect(() => {
-    setScale(1);
-    setPosition({ x: 0, y: 0 });
-    setRotation(0);
-    setIsWidthFitted(false);
-  }, [currentIndex, layoutMode]);
-
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (scale > 1 && layoutMode === 'horizontal' && imageRef.current && containerRef.current) {
-      const imgRect = imageRef.current.getBoundingClientRect();
-      const containerRect = containerRef.current.getBoundingClientRect();
-
-      // 只有当图片尺寸超过容器时才允许拖动
-      const canDragX = imgRect.width > containerRect.width;
-      const canDragY = imgRect.height > containerRect.height;
-
-      if (canDragX || canDragY) {
-        setIsDragging(true);
-        setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y });
-      }
-    }
-  };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (isDragging && scale > 1 && imageRef.current && containerRef.current) {
-      const imgRect = imageRef.current.getBoundingClientRect();
-      const containerRect = containerRef.current.getBoundingClientRect();
-
-      // 计算新位置
-      let newX = e.clientX - dragStart.x;
-      let newY = e.clientY - dragStart.y;
-
-      // 计算图片的实际尺寸（包含缩放）
-      const scaledWidth = imgRect.width;
-      const scaledHeight = imgRect.height;
-
-      // 计算最大可拖动范围
-      const maxX = Math.max(0, (scaledWidth - containerRect.width) / 2);
-      const maxY = Math.max(0, (scaledHeight - containerRef.current!.getBoundingClientRect().height) / 2);
-
-      // 限制水平拖动范围
-      if (scaledWidth > containerRect.width) {
-        newX = Math.min(Math.max(newX, -maxX), maxX);
-      } else {
-        newX = 0;
-      }
-
-      // 限制垂直拖动范围
-      if (scaledHeight > containerRef.current!.getBoundingClientRect().height) {
-        newY = Math.min(Math.max(newY, -maxY), maxY);
-      } else {
-        newY = 0;
-      }
-
-      setPosition({ x: newX, y: newY });
-    }
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
-
-  useEffect(() => {
-    const handleGlobalMouseUp = () => {
-      setIsDragging(false);
-    };
-
-    window.addEventListener('mouseup', handleGlobalMouseUp);
-    return () => window.removeEventListener('mouseup', handleGlobalMouseUp);
-  }, []);
+  }, [layoutMode]);
 
   const handlePrevious = () => {
     setCurrentIndex((prev) => (prev > 0 ? prev - 1 : files.length - 1));
@@ -218,294 +51,20 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
     setLayoutMode(prev => prev === 'horizontal' ? 'vertical' : 'horizontal');
   };
 
-  const setMediaRef = useCallback((element: HTMLDivElement | null, index: number) => {
-    if (element) {
-      mediaRefs.current.set(index, element);
-    } else {
-      mediaRefs.current.delete(index);
-    }
-  }, []);
 
-  const handleRotate = useCallback(() => {
-    setRotation(prev => (prev + 90) % 360);
-  }, []);
-
-  const handleZoomIn = useCallback(() => {
-    if (layoutMode === 'horizontal') {
-      setScale(prevScale => Math.min(prevScale + 0.2, 5));
-    }
-  }, [layoutMode]);
-
-  const handleZoomOut = useCallback(() => {
-    if (layoutMode === 'horizontal') {
-      setScale(prevScale => Math.max(prevScale - 0.2, 0.1));
-    }
-  }, [layoutMode]);
-
-  const handleFitToScreen = useCallback(() => {
-    setScale(1);
-  }, []);
-
-  const handleFitWidth = useCallback(() => {
-    if (!isWidthFitted) {
-      if (layoutMode === 'horizontal' && imageRef.current && containerRef.current) {
-        const imgRect = imageRef.current.getBoundingClientRect();
-        const containerRect = containerRef.current.getBoundingClientRect();
-        const currentWidth = imgRect.width / scale;
-        const newScale = containerRect.width / currentWidth;
-        setScale(newScale);
-
-        // 计算图片在新scale下的高度
-        const newHeight = imgRect.height * (newScale / scale);
-        // 如果图片高度大于容器，将其定位到顶部
-        if (newHeight > containerRect.height) {
-          const maxY = (newHeight - containerRect.height) / 2;
-          setPosition({ x: 0, y: maxY });
-        } else {
-          setPosition({ x: 0, y: 0 });
-        }
-
-        setIsWidthFitted(true);
-      }
-    } else {
-      setScale(1);
-      setPosition({ x: 0, y: 0 });
-      setIsWidthFitted(false);
-    }
-  }, [layoutMode, scale, isWidthFitted]);
-
-  const handleWheel = useCallback((e: React.WheelEvent) => {
-    if (layoutMode === 'horizontal' && isWidthFitted && imageRef.current && containerRef.current) {
-      e.preventDefault();
-      const imgRect = imageRef.current.getBoundingClientRect();
-      const containerRect = containerRef.current.getBoundingClientRect();
-
-      // 只有当图片高度大于容器高度时才允许滚动
-      if (imgRect.height > containerRect.height) {
-        const deltaY = e.deltaY;
-        const maxY = Math.max(0, (imgRect.height - containerRect.height) / 2);
-
-        // 计算新的Y位置
-        let newY = position.y - deltaY;
-
-        // 限制垂直滚动范围
-        newY = Math.min(Math.max(newY, -maxY), maxY);
-
-        setPosition(prev => ({ ...prev, y: newY }));
-      }
-    }
-  }, [layoutMode, isWidthFitted, position.y]);
-
-  const handlePlaybackRateChange = (rate: number) => {
-    setPlaybackRate(rate);
-  };
-
-  const handleVolumeChange = (value: number) => {
-    saveVolume(value);
-    if (value === 0) {
-      saveMuted(true);
-    } else {
-      saveMuted(false);
-    }
-  };
-
-  const handleToggleMute = () => {
-    saveMuted(!muted);
-  };
-
-  const handleToggleFullscreen = () => {
-    if (!document.fullscreenElement) {
-      containerRef.current?.requestFullscreen();
-      setIsFullscreen(true);
-    } else {
-      document.exitFullscreen();
-      setIsFullscreen(false);
-    }
-  };
-
-  const handleProgress = (state: { played: number }) => {
-    if (!seeking) {
-      setPlayed(state.played);
-    }
-  };
-
-  const handleSeekMouseDown = () => {
-    setSeeking(true);
-  };
-
-  const handleSeekChange = (value: number) => {
-    setPlayed(value);
-  };
-
-  const handleSeekMouseUp = (value: number) => {
-    setSeeking(false);
-    if (currentItemRef.current) {
-      const player = currentItemRef.current.querySelector('video');
-      if (player) {
-        player.currentTime = value * player.duration;
-      }
-    }
-  };
-
-  const handleAspectRatioChange = (ratio: string) => {
-    setAspectRatio(ratio);
-  };
-
-  const togglePlay = (index: number) => {
-    setPlayingStates(prev => {
-      const newStates = { ...prev };
-      Object.keys(prev).forEach(key => {
-        newStates[parseInt(key)] = false;
-      });
-      newStates[index] = !prev[index];
-      return newStates;
-    });
-  };
-
-  const formatTime = (seconds: number) => {
-    const pad = (num: number) => String(Math.floor(num)).padStart(2, '0');
-    const hours = seconds / 3600;
-    const minutes = (seconds % 3600) / 60;
-    const secs = seconds % 60;
-
-    if (hours >= 1) {
-      return `${pad(hours)}:${pad(minutes)}:${pad(secs)}`;
-    }
-    return `${pad(minutes)}:${pad(secs)}`;
-  };
-
-  const getCurrentTime = () => {
-    if (currentItemRef.current) {
-      const video = currentItemRef.current.querySelector('video');
-      if (video) {
-        return formatTime(video.currentTime) + ' / ' + formatTime(video.duration);
-      }
-    }
-    return '00:00 / 00:00';
-  };
-
-  const renderToolbar = () => (
-    <div className={styles.toolbar}>
-      <div className={styles.file_counter}>
-        {currentIndex + 1} / {files.length}
-      </div>
-      <div className={styles.top_controls}>
-        {layoutMode === 'horizontal' && (
-          <>
-            <button
-              className={styles.layout_toggle}
-              onClick={handleRotate}
-              data-tooltip="旋转"
-            >
-              <ArrowPathIcon className="w-5 h-5" />
-            </button>
-            <button
-              className={styles.layout_toggle}
-              onClick={handleZoomOut}
-              data-tooltip="缩小"
-            >
-              <MinusIcon className="w-5 h-5" />
-            </button>
-            <button
-              className={styles.layout_toggle}
-              onClick={handleZoomIn}
-              data-tooltip="放大"
-            >
-              <PlusIcon className="w-5 h-5" />
-            </button>
-            <button
-              className={styles.layout_toggle}
-              onClick={handleFitWidth}
-              data-tooltip={isWidthFitted ? "重置" : "横向铺满"}
-            >
-              {isWidthFitted ? (
-                <ArrowsPointingInIcon className="w-5 h-5" />
-              ) : (
-                <ArrowsPointingOutIcon className="w-5 h-5 rotate-90" />
-              )}
-            </button>
-          </>
-        )}
-        <button
-          className={styles.layout_toggle}
-          onClick={toggleLayout}
-          data-tooltip={layoutMode === 'horizontal' ? '切换到垂直布局' : '切换到水平布局'}
-        >
-          {layoutMode === 'horizontal' ? (
-            <ArrowsUpDownIcon className="w-5 h-5" />
-          ) : (
-            <ArrowsRightLeftIcon className="w-5 h-5" />
-          )}
-        </button>
-      </div>
-    </div>
+  const renderLayoutToggle = () => (
+    <button
+      className={styles.layout_toggle}
+      onClick={toggleLayout}
+      data-tooltip={layoutMode === 'horizontal' ? '切换到垂直布局' : '切换到水平布局'}
+    >
+      {layoutMode === 'horizontal' ? (
+        <ArrowsUpDownIcon className="w-5 h-5" />
+      ) : (
+        <ArrowsRightLeftIcon className="w-5 h-5" />
+      )}
+    </button>
   );
-
-  const renderMediaItem = (file: MediaFile, index: number) => (
-    <MediaItem
-      file={file}
-      index={index}
-      currentIndex={currentIndex}
-      isDragging={isDragging}
-      rotation={rotation}
-      scale={scale}
-      position={position}
-      layoutMode={layoutMode}
-      playingStates={playingStates}
-      playbackRate={playbackRate}
-      volume={volume}
-      muted={muted}
-      aspectRatio={aspectRatio}
-      played={played}
-      videoError={videoError}
-      mediaRefs={mediaRefs}
-      currentItemRef={currentItemRef}
-      imageRef={imageRef}
-      handleMouseDown={handleMouseDown}
-      handleMouseMove={handleMouseMove}
-      handleMouseUp={handleMouseUp}
-      handleWheel={handleWheel}
-      togglePlay={togglePlay}
-      handleProgress={handleProgress}
-      handleSeekMouseDown={handleSeekMouseDown}
-      handleSeekChange={handleSeekChange}
-      handleSeekMouseUp={handleSeekMouseUp}
-      handleToggleMute={handleToggleMute}
-      handleVolumeChange={handleVolumeChange}
-      getCurrentTime={getCurrentTime}
-      setVideoError={setVideoError}
-    />
-  );
-
-  const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
-    if (layoutMode === 'vertical') {
-      const container = e.currentTarget;
-      const items = Array.from(mediaRefs.current.values());
-      const containerRect = container.getBoundingClientRect();
-
-      // 找到最接近容器中心的元素
-      let closestItem = null;
-      let minDistance = Infinity;
-      let closestIndex = currentIndex;
-
-      items.forEach((item, index) => {
-        const itemRect = item.getBoundingClientRect();
-        const itemCenter = itemRect.top + itemRect.height / 2;
-        const containerCenter = containerRect.top + containerRect.height / 2;
-        const distance = Math.abs(itemCenter - containerCenter);
-
-        if (distance < minDistance) {
-          minDistance = distance;
-          closestItem = item;
-          closestIndex = parseInt(item.getAttribute('data-index') || '0');
-        }
-      });
-
-      if (closestIndex !== currentIndex) {
-        setCurrentIndex(closestIndex);
-      }
-    }
-  }, [layoutMode, currentIndex]);
 
   if (files.length === 0) {
     return (
@@ -515,41 +74,22 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
     );
   }
 
-  const currentFile = files[currentIndex];
+  const sharedProps = {
+    files,
+    currentIndex,
+    onIndexChange: setCurrentIndex,
+    // volume,
+    // muted,
+    // onVolumeChange: handleVolumeChange,
+    // onMuteToggle: handleToggleMute,
+  };
 
   return (
-    <div
-      ref={containerRef}
-      className={`${styles.media_viewer} ${styles.fade_in} ${styles[layoutMode]}`}
-      onScroll={handleScroll}
-    >
-      {renderToolbar()}
-      {/* 水平布局的导航按钮 */}
-      {layoutMode === 'horizontal' && (
-        <>
-          <button
-            onClick={handlePrevious}
-            className={`${styles.nav_button} ${styles.prev}`}
-          >
-            ◀
-          </button>
-          <button
-            onClick={handleNext}
-            className={`${styles.nav_button} ${styles.next}`}
-          >
-            ▶
-          </button>
-        </>
-      )}
-      {/* 底部工具栏 */}
+    <div className={`${styles.media_viewer} ${styles.fade_in} ${styles[layoutMode]}`}>
       {layoutMode === 'horizontal' ? (
-        <div className={styles.horizontal_container}>
-          {renderMediaItem(currentFile, currentIndex)}
-        </div>
+        <HorizontalViewer {...sharedProps} renderLayoutToggle={renderLayoutToggle} />
       ) : (
-        <div className={styles.vertical_container}>
-          {files.map((file, index) => renderMediaItem(file, index))}
-        </div>
+        <VerticalViewer {...sharedProps} renderLayoutToggle={renderLayoutToggle} />
       )}
     </div>
   );
