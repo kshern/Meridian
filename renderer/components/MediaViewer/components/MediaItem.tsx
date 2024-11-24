@@ -26,6 +26,20 @@ const LoadingFallback = () => (
     </div>
 );
 
+interface MediaItemProps {
+    file: MediaFile;
+    index: number;
+    currentIndex: number;
+    isDragging: boolean;
+    rotation: number;
+    scale: number;
+    position: { x: number; y: number };
+    handleMouseDown?: (e: React.MouseEvent) => void;
+    handleMouseMove?: (e: React.MouseEvent) => void;
+    handleMouseUp?: (e: React.MouseEvent) => void;
+    onPlayingChange?: (isPlaying: boolean) => void;
+}
+
 const MediaItem = memo(forwardRef<HTMLImageElement, MediaItemProps>(({
     file,
     index,
@@ -37,6 +51,7 @@ const MediaItem = memo(forwardRef<HTMLImageElement, MediaItemProps>(({
     handleMouseDown,
     handleMouseMove,
     handleMouseUp,
+    onPlayingChange,
 }, ref) => {
     const isImage = file.type === MEDIA_TYPES.IMAGE;
     const isCurrent = index === currentIndex;
@@ -94,8 +109,12 @@ const MediaItem = memo(forwardRef<HTMLImageElement, MediaItemProps>(({
     }, []);
 
     const togglePlay = useCallback((index: number) => {
-        setPlayingStates(prev => updatePlayingStates(prev, index));
-    }, []);
+        setPlayingStates(prev => {
+            const newStates = updatePlayingStates(prev, index);
+            onPlayingChange?.(newStates[index] || false);
+            return newStates;
+        });
+    }, [onPlayingChange]);
 
     const handleVolumeChange = (value: number) => {
         handleVolumeChangeUtil(value, saveVolume, saveMuted);
@@ -146,6 +165,7 @@ const MediaItem = memo(forwardRef<HTMLImageElement, MediaItemProps>(({
                         onPlaybackRateChange={setPlaybackRate}
                         onToggleFullscreen={handleToggleFullscreen}
                         getCurrentTime={getCurrentVideoTime}
+                        isCurrent={isCurrent}
                     />
                 )}
             </Suspense>

@@ -5,11 +5,12 @@ import { MediaViewerBaseProps } from '../types';
 import MediaItem from './MediaItem';
 import styles from '../index.module.scss';
 
-export const HorizontalViewer: React.FC<MediaViewerBaseProps> = ({
+export const HorizontalViewer: React.FC<MediaViewerBaseProps & { onPlayingChange: (isPlaying: boolean) => void }> = ({
     files,
     currentIndex,
     onIndexChange,
-    renderLayoutToggle
+    renderLayoutToggle,
+    onPlayingChange
 }) => {
     const [scale, setScale] = useState(1);
     const [isDragging, setIsDragging] = useState(false);
@@ -221,6 +222,7 @@ export const HorizontalViewer: React.FC<MediaViewerBaseProps> = ({
                 handleMouseDown={handleMouseDown}
                 handleMouseMove={handleMouseMove}
                 handleMouseUp={handleMouseUp}
+                onPlayingChange={onPlayingChange}
             />
         </div>
     );

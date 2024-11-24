@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { MediaFile } from '../../../main/fileUtils';
 import { ArrowsRightLeftIcon, ArrowsUpDownIcon } from '@heroicons/react/24/outline';
 import styles from './index.module.scss';
@@ -16,6 +16,7 @@ type LayoutMode = 'horizontal' | 'vertical';
 const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) => {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [layoutMode, setLayoutMode] = useState<LayoutMode>('horizontal');
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
 
   useEffect(() => {
     setCurrentIndex(initialIndex);
@@ -23,7 +24,7 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
 
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
-      if (layoutMode === 'horizontal') {
+      if (layoutMode === 'horizontal' && !isVideoPlaying) {
         switch (event.key) {
           case 'ArrowLeft':
             handlePrevious();
@@ -37,7 +38,7 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [layoutMode]);
+  }, [layoutMode, isVideoPlaying]);
 
   const handlePrevious = () => {
     setCurrentIndex((prev) => (prev > 0 ? prev - 1 : files.length - 1));
@@ -50,7 +51,6 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
   const toggleLayout = () => {
     setLayoutMode(prev => prev === 'horizontal' ? 'vertical' : 'horizontal');
   };
-
 
   const renderLayoutToggle = () => (
     <button
@@ -78,10 +78,7 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
     files,
     currentIndex,
     onIndexChange: setCurrentIndex,
-    // volume,
-    // muted,
-    // onVolumeChange: handleVolumeChange,
-    // onMuteToggle: handleToggleMute,
+    onPlayingChange: setIsVideoPlaying,
   };
 
   return (

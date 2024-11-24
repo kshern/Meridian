@@ -36,3 +36,12 @@ export const ANIMATION_DURATION = 300;
 
 // 进度条更新间隔（毫秒）
 export const PROGRESS_INTERVAL = 1000;
+
+// 视频快进/快退时间（秒）
+export const VIDEO_SEEK_TIME = 10;
+
+// 键盘按键代码
+export const KEY_CODES = {
+    LEFT_ARROW: 'ArrowLeft',
+    RIGHT_ARROW: 'ArrowRight',
+} as const;

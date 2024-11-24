@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useEffect, useCallback, useRef } from 'react';
 import { PlayIcon } from '@heroicons/react/24/solid';
 import ReactPlayer from 'react-player';
 import styles from './MediaItem.module.scss';
 import { VideoControls } from './VideoControls';
-import { CSS_CLASSES, PROGRESS_INTERVAL } from '../utils/constants';
+import { CSS_CLASSES, PROGRESS_INTERVAL, KEY_CODES, VIDEO_SEEK_TIME } from '../utils/constants';
 
 interface VideoPlayerProps {
     path: string;
@@ -25,6 +25,7 @@ interface VideoPlayerProps {
     onPlaybackRateChange: (rate: number) => void;
     onToggleFullscreen: () => void;
     getCurrentTime: () => string;
+    isCurrent: boolean;
 }
 
 const VideoPlayer: React.FC<VideoPlayerProps> = ({
@@ -47,7 +48,46 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     onPlaybackRateChange,
     onToggleFullscreen,
     getCurrentTime,
+    isCurrent,
 }) => {
+    const playerRef = useRef<ReactPlayer>(null);
+
+    const handleKeyDown = useCallback((e: KeyboardEvent) => {
+        if (!isCurrent || !playerRef.current) return;
+
+        const video = playerRef.current.getInternalPlayer();
+        if (!video) return;
+
+        const currentTime = video.currentTime;
+        const duration = video.duration;
+
+        switch (e.code) {
+            case KEY_CODES.LEFT_ARROW:
+                if (isPlaying) {
+                    e.preventDefault();
+                    const newTime = Math.max(0, currentTime - VIDEO_SEEK_TIME);
+                    video.currentTime = newTime;
+                    onSeekChange(newTime / duration);
+                }
+                break;
+            case KEY_CODES.RIGHT_ARROW:
+                if (isPlaying) {
+                    e.preventDefault();
+                    const newTime = Math.min(duration, currentTime + VIDEO_SEEK_TIME);
+                    video.currentTime = newTime;
+                    onSeekChange(newTime / duration);
+                }
+                break;
+        }
+    }, [isPlaying, isCurrent, onSeekChange]);
+
+    useEffect(() => {
+        window.addEventListener('keydown', handleKeyDown);
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [handleKeyDown]);
+
     return (
         <div className={`${styles.media_container} ${!isPlaying ? CSS_CLASSES.PAUSED : ''}`}>
             <div
@@ -55,6 +95,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
                 onClick={onTogglePlay}
             >
                 <ReactPlayer
+                    ref={playerRef}
                     url={`file://${path}`}
                     playing={isPlaying}
                     loop={false}
