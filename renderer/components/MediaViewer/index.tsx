@@ -20,6 +20,7 @@ import {
 } from '@heroicons/react/24/outline';
 import styles from './index.module.scss';
 import { useVolume } from '../../hooks/useVolume';
+import MediaItem from './components/MediaItem';
 
 interface MediaViewerProps {
   files: MediaFile[];
@@ -61,7 +62,7 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
       if (layoutMode === 'horizontal') {
         const currentFile = files[currentIndex];
         const video = currentItemRef.current?.querySelector('video');
-        
+
         switch (event.key) {
           case 'ArrowLeft':
             if (currentFile.type === 'video' && video) {
@@ -253,7 +254,7 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
         const currentWidth = imgRect.width / scale;
         const newScale = containerRect.width / currentWidth;
         setScale(newScale);
-        
+
         // 计算图片在新scale下的高度
         const newHeight = imgRect.height * (newScale / scale);
         // 如果图片高度大于容器，将其定位到顶部
@@ -263,7 +264,7 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
         } else {
           setPosition({ x: 0, y: 0 });
         }
-        
+
         setIsWidthFitted(true);
       }
     } else {
@@ -278,18 +279,18 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
       e.preventDefault();
       const imgRect = imageRef.current.getBoundingClientRect();
       const containerRect = containerRef.current.getBoundingClientRect();
-      
+
       // 只有当图片高度大于容器高度时才允许滚动
       if (imgRect.height > containerRect.height) {
         const deltaY = e.deltaY;
         const maxY = Math.max(0, (imgRect.height - containerRect.height) / 2);
-        
+
         // 计算新的Y位置
         let newY = position.y - deltaY;
-        
+
         // 限制垂直滚动范围
         newY = Math.min(Math.max(newY, -maxY), maxY);
-        
+
         setPosition(prev => ({ ...prev, y: newY }));
       }
     }
@@ -366,7 +367,7 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
     const hours = seconds / 3600;
     const minutes = (seconds % 3600) / 60;
     const secs = seconds % 60;
-    
+
     if (hours >= 1) {
       return `${pad(hours)}:${pad(minutes)}:${pad(secs)}`;
     }
@@ -391,13 +392,13 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
       <div className={styles.top_controls}>
         {layoutMode === 'horizontal' && (
           <>
-          <button
-            className={styles.layout_toggle}
-            onClick={handleRotate}
-            data-tooltip="旋转"
-          >
-            <ArrowPathIcon className="w-5 h-5" />
-          </button>
+            <button
+              className={styles.layout_toggle}
+              onClick={handleRotate}
+              data-tooltip="旋转"
+            >
+              <ArrowPathIcon className="w-5 h-5" />
+            </button>
             <button
               className={styles.layout_toggle}
               onClick={handleZoomOut}
@@ -440,177 +441,41 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ files, initialIndex = 0 }) =>
     </div>
   );
 
-  const renderMediaItem = (file: MediaFile, index: number) => {
-    const isImage = file.type === 'image';
-    const isCurrent = index === currentIndex;
-    const isPlaying = playingStates[index] || false;
-    const imageClasses = [
-      isDragging && 'dragging',
-      rotation !== 0 && 'rotating'
-    ].filter(Boolean).join(' ');
-
-    const mediaStyle = layoutMode === 'horizontal' && isCurrent && isImage ? {
-      transform: `scale(${scale}) translate(${position.x / scale}px, ${position.y / scale}px) rotate(${rotation}deg)`,
-      cursor: isDragging ? 'grabbing' : (scale > 1 ? 'grab' : 'default'),
-    } : undefined;
-
-    return (
-      <div
-        key={file.path}
-        className={`${styles.media_item} ${isCurrent ? styles.current : ''}`}
-        ref={(el) => {
-          if (el) mediaRefs.current.set(index, el);
-          if (isCurrent) currentItemRef.current = el;
-        }}
-        data-index={index}
-        onMouseDown={isCurrent && isImage ? handleMouseDown : undefined}
-        onMouseMove={isCurrent && isImage ? handleMouseMove : undefined}
-        onMouseUp={isCurrent && isImage ? handleMouseUp : undefined}
-        onWheel={isCurrent && isImage ? handleWheel : undefined}
-      >
-        {isImage ? (
-          <img
-            ref={isCurrent ? imageRef : null}
-            src={`file://${file.path}`}
-            alt={file.name}
-            className={imageClasses}
-            style={mediaStyle}
-            draggable={false}
-          />
-        ) : (
-          <div className={`${styles.media_container} ${!isPlaying ? styles.paused : ''}`}>
-            <div 
-              className={styles.video_wrapper}
-              onClick={isCurrent ? () => togglePlay(index) : undefined}
-            >
-              <ReactPlayer
-                url={`file://${file.path}`}
-                width="100%"
-                height="100%"
-                playing={isPlaying}
-                playbackRate={playbackRate}
-                volume={volume}
-                muted={muted}
-                style={{ maxHeight: '100%', aspectRatio }}
-                onProgress={isCurrent ? handleProgress : undefined}
-                onError={(error) => {
-                  console.error('Video playback error:', error);
-                  setVideoError(prev => ({
-                    ...prev,
-                    [index]: '无法播放此视频，可能是由于缺少所需的编解码器。请安装相应的编解码器后重试。'
-                  }));
-                }}
-                progressInterval={1000}
-                controls={false}
-                config={{
-                  file: {
-                    attributes: {
-                      controlsList: 'nodownload',
-                      disablePictureInPicture: true,
-                      style: {
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'contain'
-                      }
-                    }
-                  }
-                }}
-              />
-            </div>
-            {videoError[index] && (
-              <div className={styles.error_message}>
-                {videoError[index]}
-              </div>
-            )}
-            {!isPlaying && isCurrent && !videoError[index] && (
-              <div 
-                className={styles.center_play_button}
-                onClick={() => togglePlay(index)}
-              >
-                <PlayIcon className="w-16 h-16" />
-              </div>
-            )}
-            {isCurrent && (
-              <div className={styles.video_controls}>
-                <button onClick={() => togglePlay(index)}>
-                  {isPlaying ? (
-                    <PauseIcon className="w-5 h-5" />
-                  ) : (
-                    <PlayIcon className="w-5 h-5" />
-                  )}
-                </button>
-                
-                <div className={styles.progress_bar} data-time={getCurrentTime()}>
-                  <input
-                    type="range"
-                    min={0}
-                    max={1}
-                    step="any"
-                    value={played}
-                    onMouseDown={handleSeekMouseDown}
-                    onChange={(e) => handleSeekChange(parseFloat(e.target.value))}
-                    onMouseUp={(e) => handleSeekMouseUp(parseFloat((e.target as HTMLInputElement).value))}
-                    style={{ '--progress': `${played * 100}%` } as React.CSSProperties}
-                  />
-                </div>
-
-                <div className={styles.volume_control}>
-                  <button onClick={handleToggleMute}>
-                    {muted || volume === 0 ? (
-                      <SpeakerXMarkIcon className="w-5 h-5" />
-                    ) : (
-                      <SpeakerWaveIcon className="w-5 h-5" />
-                    )}
-                  </button>
-                  <div className={styles.volume_slider}>
-                    <input
-                      type="range"
-                      min={0}
-                      max={1}
-                      step="any"
-                      value={volume}
-                      onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
-                      style={{ '--volume': `${volume * 100}%` } as React.CSSProperties}
-                    />
-                  </div>
-                </div>
-
-                <div className={styles.right_controls}>
-                  <select
-                    value={playbackRate}
-                    onChange={(e) => handlePlaybackRateChange(parseFloat(e.target.value))}
-                  >
-                    <option value={0.5}>0.5x</option>
-                    <option value={1}>1x</option>
-                    <option value={1.5}>1.5x</option>
-                    <option value={2}>2x</option>
-                  </select>
-
-                  <select
-                    value={aspectRatio}
-                    onChange={(e) => handleAspectRatioChange(e.target.value)}
-                  >
-                    <option value="16:9">16:9</option>
-                    <option value="4:3">4:3</option>
-                    <option value="1:1">1:1</option>
-                    <option value="auto">自动</option>
-                  </select>
-
-                  <button onClick={handleToggleFullscreen}>
-                    {isFullscreen ? (
-                      <ArrowsPointingInIcon className="w-5 h-5" />
-                    ) : (
-                      <ArrowsPointingOutIcon className="w-5 h-5" />
-                    )}
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    );
-  };
+  const renderMediaItem = (file: MediaFile, index: number) => (
+    <MediaItem
+      file={file}
+      index={index}
+      currentIndex={currentIndex}
+      isDragging={isDragging}
+      rotation={rotation}
+      scale={scale}
+      position={position}
+      layoutMode={layoutMode}
+      playingStates={playingStates}
+      playbackRate={playbackRate}
+      volume={volume}
+      muted={muted}
+      aspectRatio={aspectRatio}
+      played={played}
+      videoError={videoError}
+      mediaRefs={mediaRefs}
+      currentItemRef={currentItemRef}
+      imageRef={imageRef}
+      handleMouseDown={handleMouseDown}
+      handleMouseMove={handleMouseMove}
+      handleMouseUp={handleMouseUp}
+      handleWheel={handleWheel}
+      togglePlay={togglePlay}
+      handleProgress={handleProgress}
+      handleSeekMouseDown={handleSeekMouseDown}
+      handleSeekChange={handleSeekChange}
+      handleSeekMouseUp={handleSeekMouseUp}
+      handleToggleMute={handleToggleMute}
+      handleVolumeChange={handleVolumeChange}
+      getCurrentTime={getCurrentTime}
+      setVideoError={setVideoError}
+    />
+  );
 
   const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
     if (layoutMode === 'vertical') {
