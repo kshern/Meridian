@@ -1,0 +1,136 @@
+@import '../styles/constants.scss';
+
+.controls_container {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    padding: 20px 20px 15px;
+
+    &.visible {
+        opacity: 1;
+    }
+}
+
+.controls_wrapper {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.progress_container {
+    width: 100%;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    padding: 6px 0;
+    margin: -6px 0;
+
+    &:hover .progress_bar {
+        height: 6px;
+    }
+}
+
+.progress_bar {
+    width: 100%;
+    height: 4px;
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+    position: relative;
+    transition: height 0.2s ease;
+}
+
+.progress_played {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    background-color: #1890ff;
+    border-radius: 2px;
+}
+
+.buttons_container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.left_controls,
+.right_controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.control_button {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.9;
+    transition: opacity 0.2s ease;
+
+    &:hover {
+        opacity: 1;
+    }
+}
+
+.volume_slider {
+    width: 80px;
+    height: 4px;
+    -webkit-appearance: none;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+    outline: none;
+    transition: height 0.2s ease;
+
+    &::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 12px;
+        height: 12px;
+        background: white;
+        border-radius: 50%;
+        cursor: pointer;
+    }
+
+    &:hover {
+        height: 6px;
+    }
+}
+
+.time {
+    color: white;
+    font-size: 14px;
+    min-width: 100px;
+    font-family: monospace;
+}
+
+.playback_rate {
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: none;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    outline: none;
+
+    &:hover {
+        background: rgba(0, 0, 0, 0.7);
+    }
+}
+
+.playback_option {
+    background: #1a1a1a;
+    color: white;
+    font-size: 14px;
+}

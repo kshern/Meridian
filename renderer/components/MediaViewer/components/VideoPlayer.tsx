@@ -51,6 +51,16 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     isCurrent,
 }) => {
     const playerRef = useRef<ReactPlayer>(null);
+    const videoRef = useRef<HTMLVideoElement | null>(null);
+
+    useEffect(() => {
+        if (playerRef.current) {
+            const videoElement = playerRef.current.getInternalPlayer();
+            if (videoElement instanceof HTMLVideoElement) {
+                videoRef.current = videoElement;
+            }
+        }
+    }, [playerRef.current]);
 
     const handleKeyDown = useCallback((e: KeyboardEvent) => {
         if (!isCurrent || !playerRef.current) return;
@@ -149,6 +159,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
                     onToggleMute={onToggleMute}
                     onPlaybackRateChange={onPlaybackRateChange}
                     onToggleFullscreen={onToggleFullscreen}
+                    videoRef={videoRef}
                 />
             )}
         </div>
