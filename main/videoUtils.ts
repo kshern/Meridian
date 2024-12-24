@@ -6,7 +6,11 @@ import { existsSync, mkdirSync } from 'fs';
 import { createHash } from 'crypto';
 
 // Set ffmpeg path
-ffmpeg.setFfmpegPath(ffmpegStatic);
+const ffmpegPath = app.isPackaged
+  ? join(process.resourcesPath, 'ffmpeg.exe')
+  : ffmpegStatic;
+console.log('Using ffmpeg path:', ffmpegPath);
+ffmpeg.setFfmpegPath(ffmpegPath);
 
 // 使用与图片缩略图相同的缓存目录
 const CACHE_DIR = join(process.env.APPDATA || process.env.HOME || '', '.meridian', 'thumbnails');

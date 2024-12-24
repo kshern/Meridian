@@ -37,3 +37,6 @@ win:
       arch: 
         - x64
   icon: resources/icon.png
+  extraResources:
+    - from: "node_modules/ffmpeg-static/ffmpeg.exe"
+      to: "ffmpeg.exe"
