@@ -119,7 +119,7 @@ enum ThemeEvent {
 }
 
 export const useTheme = () => {
-  const [theme, setTheme] = useState<Theme>((themeCache as Theme) || 'light');
+  const [theme, setTheme] = useState<Theme>((themeCache as Theme) || 'dark');
   const [colors, setColors] = useState<ThemeColors>(themeColors[theme]);
 
   const getTheme = useCallback(async () => {
