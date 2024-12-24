@@ -2,19 +2,15 @@ import React from 'react';
 import {
   ArrowUturnUpIcon,
   ViewColumnsIcon,
-  Bars3Icon,
-  MapIcon,
   EyeIcon,
   EyeSlashIcon,
   MagnifyingGlassIcon,
   XMarkIcon,
-  ListBulletIcon,
-  Squares2X2Icon,
   MinusIcon,
   Square2StackIcon,
   XCircleIcon,
   SunIcon,
-  MoonIcon
+  MoonIcon,
 } from '@heroicons/react/24/outline';
 import { useTheme } from '../hooks/useTheme';
 
@@ -22,13 +18,11 @@ interface ToolbarProps {
   currentPath: string;
   searchQuery: string;
   viewMode: string;
-  viewType: 'grid' | 'list';
   showSidebar: boolean;
   showPathBar: boolean;
   onOpenDirectory: () => void;
   onGoBack: () => void;
   onSearchChange: (query: string) => void;
-  onViewModeChange: (mode: 'grid' | 'list') => void;
   onToggleSidebar: () => void;
   onTogglePathBar: () => void;
 }
@@ -37,13 +31,11 @@ const Toolbar: React.FC<ToolbarProps> = ({
   currentPath,
   searchQuery,
   viewMode,
-  viewType,
   showSidebar,
   showPathBar,
   onOpenDirectory,
   onGoBack,
   onSearchChange,
-  onViewModeChange,
   onToggleSidebar,
   onTogglePathBar
 }) => {
@@ -130,21 +122,6 @@ const Toolbar: React.FC<ToolbarProps> = ({
             </button>
           )}
         </div>
-
-        <div className={dividerClasses} />
-
-        {/* 视图切换按钮 */}
-        <button
-          onClick={() => onViewModeChange(viewType === 'grid' ? 'list' : 'grid')}
-          className={`${buttonBaseClasses} ${buttonInactiveClasses}`}
-          title={viewType === 'grid' ? "切换到列表视图" : "切换到网格视图"}
-        >
-          {viewType === 'grid' ? (
-            <ListBulletIcon className="w-5 h-5" />
-          ) : (
-            <Squares2X2Icon className="w-5 h-5" />
-          )}
-        </button>
 
         <div className={dividerClasses} />
 

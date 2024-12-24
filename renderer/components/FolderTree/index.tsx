@@ -7,6 +7,7 @@ interface FolderTreeProps {
   onSelect: (path: string) => void;
   showMediaOnly?: boolean;
   currentPath?: string;
+  sortByTime?: boolean;
 }
 
 interface TreeItem {
@@ -155,7 +156,7 @@ const formatFileSize = (bytes: number): string => {
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
 };
 
-const FolderTree: React.FC<FolderTreeProps> = ({ onSelect, showMediaOnly, currentPath }) => {
+const FolderTree: React.FC<FolderTreeProps> = ({ onSelect, showMediaOnly, currentPath, sortByTime }) => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   const [folders, setFolders] = useState<TreeItem[]>([]);
@@ -193,7 +194,7 @@ const FolderTree: React.FC<FolderTreeProps> = ({ onSelect, showMediaOnly, curren
       const items = await window.ipc.scanDirectory(normalizedPath);
       console.log('Scan results:', items);
 
-      return items.map((item: any) => ({
+      const mappedItems = items.map((item: any) => ({
         name: item.name,
         path: window.ipc.convertToAppPath(item.path),
         type: item.type,
@@ -202,10 +203,32 @@ const FolderTree: React.FC<FolderTreeProps> = ({ onSelect, showMediaOnly, curren
         isExpanded: false,
         children: item.type === 'directory' ? [] : undefined
       }));
+
+      // 对文件列表进行排序
+      return sortItems(mappedItems);
     } catch (error) {
       console.error('Error loading folders:', error);
       return [];
     }
+  };
+
+  const sortItems = (items: TreeItem[]): TreeItem[] => {
+    return [...items].sort((a, b) => {
+      // 文件夹始终排在前面
+      if (a.type === 'directory' && b.type !== 'directory') return -1;
+      if (a.type !== 'directory' && b.type === 'directory') return 1;
+
+      // 如果都是文件夹或都是文件，按照指定的排序方式排序
+      if (sortByTime) {
+        // 按修改时间倒序
+        const timeA = a.modifiedTime?.getTime() || 0;
+        const timeB = b.modifiedTime?.getTime() || 0;
+        return timeB - timeA;
+      } else {
+        // 按文件名正序
+        return a.name.localeCompare(b.name);
+      }
+    });
   };
 
   const handleToggle = async (folderPath: string) => {
@@ -252,7 +275,7 @@ const FolderTree: React.FC<FolderTreeProps> = ({ onSelect, showMediaOnly, curren
 
   return (
     <div className={`h-full overflow-auto ${isDark ? 'bg-gray-800' : 'bg-white'} ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>
-      {folders.map((folder) => (
+      {sortItems(folders).map((folder) => (
         <TreeNode
           key={folder.path}
           item={folder}

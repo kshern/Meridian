@@ -9,6 +9,7 @@ export const useFileOperations = () => {
   const [viewType, setViewType] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [filterOtherFiles, setFilterOtherFiles] = useState<boolean>(false);
+  const [sortByTime, setSortByTime] = useState<boolean>(true);
 
   const handleOpenDirectory = async () => {
     try {
@@ -174,6 +175,22 @@ export const useFileOperations = () => {
     }
   };
 
+  const sortFiles = (files: MediaFile[]) => {
+    return [...files].sort((a, b) => {
+      if (sortByTime) {
+        // 按修改时间倒序
+        return b.modifiedTime.getTime() - a.modifiedTime.getTime();
+      } else {
+        // 按文件名正序
+        return a.name.localeCompare(b.name);
+      }
+    });
+  };
+
+  const toggleSortMode = () => {
+    setSortByTime(!sortByTime);
+  };
+
   // 监听外部打开路径的事件
   useEffect(() => {
     const cleanup = window.ipc.on('open-path', async (path: string) => {
@@ -201,19 +218,15 @@ export const useFileOperations = () => {
   }, [currentPath, files]);
 
   return {
-    // 状态
-    files,
+    files: sortFiles(files),
     currentPath,
     viewMode,
     selectedFileIndex,
     viewType,
     searchQuery,
     filterOtherFiles,
-    // 设置器
+    sortByTime,
     setSearchQuery,
-    setViewMode,
-    setFilterOtherFiles,
-    // 处理方法
     handleOpenDirectory,
     handleDirectoryClick,
     handleBack,
@@ -222,7 +235,7 @@ export const useFileOperations = () => {
     handleOpenInExplorer,
     handleViewModeChange,
     handleFilterChange,
-    // 工具方法
+    toggleSortMode,
     getMediaFiles,
   };
 };

@@ -20,6 +20,7 @@ function Home() {
     viewType,
     searchQuery,
     filterOtherFiles,
+    sortByTime,
     setSearchQuery,
     handleOpenDirectory,
     handleDirectoryClick,
@@ -29,6 +30,7 @@ function Home() {
     handleOpenInExplorer,
     handleViewModeChange,
     handleFilterChange,
+    toggleSortMode,
     getMediaFiles,
   } = useFileOperations();
 
@@ -60,13 +62,11 @@ function Home() {
           currentPath={currentPath}
           searchQuery={searchQuery}
           viewMode={viewMode}
-          viewType={viewType}
           showSidebar={showSidebar}
           showPathBar={isPathBarVisible}
           onOpenDirectory={handleOpenDirectory}
           onGoBack={handleBack}
           onSearchChange={setSearchQuery}
-          onViewModeChange={handleViewModeChange}
           onToggleSidebar={() => setShowSidebar(!showSidebar)}
           onTogglePathBar={handleTogglePathBar}
         />
@@ -75,10 +75,14 @@ function Home() {
         {isPathBarVisible && (
           <PathBar
             currentPath={currentPath}
+            viewType={viewType}
+            sortByTime={sortByTime}
             onPathSegmentClick={handlePathSegmentClick}
             onOpenInExplorer={handleOpenInExplorer}
             filterOtherFiles={filterOtherFiles}
             onFilterChange={handleFilterChange}
+            onViewModeChange={handleViewModeChange}
+            onToggleSort={toggleSortMode}
           />
         )}
 
@@ -91,6 +95,7 @@ function Home() {
                 onSelect={handleDirectoryClick}
                 showMediaOnly={filterOtherFiles}
                 currentPath={currentPath}
+                sortByTime={sortByTime}
               />
               <div
                 className="absolute right-0 top-0 w-1 h-full cursor-col-resize hover:bg-gray-300 dark:hover:bg-gray-600"
