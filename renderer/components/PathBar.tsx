@@ -36,7 +36,7 @@ const PathBar: React.FC<PathBarProps> = ({
   const isDark = theme === 'dark';
 
   // 分割路径并过滤空字符串
-  const pathParts = currentPath.split('>').filter(Boolean);
+  const pathParts = currentPath.split('/').filter(Boolean);
 
   // 样式类
   const pathSegmentClasses = isDark
@@ -67,7 +67,7 @@ const PathBar: React.FC<PathBarProps> = ({
         {/* 处理其余路径部分 */}
         {pathParts.slice(1).map((part, index) => (
           <React.Fragment key={index + 1}>
-            <span className={separatorClasses}>{'>'}</span>
+            <span className={separatorClasses}>/</span>
             <button
               className={`px-1.5 py-0.5 rounded ${pathSegmentClasses}`}
               onClick={() => onPathSegmentClick(index + 1)}

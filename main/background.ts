@@ -2,7 +2,7 @@ import path from 'path'
 import { app, ipcMain, dialog, shell } from 'electron'
 import serve from 'electron-serve'
 import { createWindow } from './helpers'
-import { scanDirectory, getFileContent, MediaFile } from './fileUtils'
+import { scanDirectory, getFileContent, MediaFile, createDirectory, renameFile } from './fileUtils'
 import * as fs from 'fs'
 import Store from 'electron-store'
 import { generateVideoThumbnail } from './videoUtils';
@@ -197,6 +197,15 @@ const registerIpcHandlers = () => {
   // 处理窗口关闭
   ipcMain.handle('close-window', () => {
     mainWindow.close();
+  });
+
+  // 文件操作处理器
+  ipcMain.handle('createDirectory', async (_, path: string) => {
+    await createDirectory(path);
+  });
+
+  ipcMain.handle('renameFile', async (_, oldPath: string, newPath: string) => {
+    await renameFile(oldPath, newPath);
   });
 }
 

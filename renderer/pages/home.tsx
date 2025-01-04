@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Head from 'next/head';
 import ThumbnailViewer from '../components/ThumbnailViewer';
 import { MediaFile } from '../../main/fileUtils';
@@ -26,12 +26,13 @@ function Home() {
     handleDirectoryClick,
     handleBack,
     handleFileClick,
-    handlePathSegmentClick,
     handleOpenInExplorer,
     handleViewModeChange,
     handleFilterChange,
     toggleSortMode,
     getMediaFiles,
+    setCurrentPath,
+    setFiles,
   } = useFileOperations();
 
   const { theme } = useTheme();
@@ -51,6 +52,13 @@ function Home() {
   const handleTogglePathBar = () => {
     savePathBarVisibility(!isPathBarVisible);
   };
+
+  const handlePathSegmentClick = useCallback(async (index: number) => {
+    if (!currentPath) return;
+    const segments = currentPath.split('/').filter(Boolean);
+    const newPath = segments.slice(0, index + 1).join('/');
+    handleDirectoryClick(newPath);
+  }, [currentPath, handleDirectoryClick]);
 
   return (
     <React.Fragment>
@@ -112,6 +120,7 @@ function Home() {
                 viewType={viewType}
                 onFileClick={handleFileClick}
                 onDirectoryClick={handleDirectoryClick}
+                currentPath={currentPath}
               />
             ) : (
               <MediaViewer

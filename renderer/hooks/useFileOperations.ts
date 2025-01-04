@@ -1,6 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { MediaFile } from '../../main/fileUtils';
 import { naturalCompare } from '../utils/sorting';
+import path from 'path';
+
+interface FileOperation {
+  type: 'rename' | 'newFolder';
+  path?: string;
+  file?: MediaFile;
+}
 
 export const useFileOperations = () => {
   const [files, setFiles] = useState<MediaFile[]>([]);
@@ -11,6 +18,7 @@ export const useFileOperations = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [filterOtherFiles, setFilterOtherFiles] = useState<boolean>(false);
   const [sortByTime, setSortByTime] = useState<boolean>(true);
+  const [operation, setOperation] = useState<FileOperation | null>(null);
 
   const handleOpenDirectory = async () => {
     try {
@@ -119,30 +127,30 @@ export const useFileOperations = () => {
     }
   };
 
-  const handlePathSegmentClick = async (index: number) => {
-    const pathParts = currentPath.split('>').filter(Boolean);
-    let targetPath;
-    if (index === 0) {
-      // 处理根目录（驱动器）的情况
-      targetPath = pathParts[0] + '>';
-    } else {
-      // 使用 > 连接路径
-      targetPath = pathParts.slice(0, index + 1).join('>');
-    }
+  // const handlePathSegmentClick = async (index: number) => {
+  //   const pathParts = currentPath.split('>').filter(Boolean);
+  //   let targetPath;
+  //   if (index === 0) {
+  //     // 处理根目录（驱动器）的情况
+  //     targetPath = pathParts[0] + '>';
+  //   } else {
+  //     // 使用 > 连接路径
+  //     targetPath = pathParts.slice(0, index + 1).join('>');
+  //   }
 
-    try {
-      const appPath = targetPath;
-      const systemPath = window.ipc.convertToSystemPath(appPath);
-      const mediaFiles = await window.ipc.scanDirectory(systemPath, filterOtherFiles);
-      setFiles(mediaFiles);
-      setCurrentPath(appPath);
-      setSelectedFileIndex(0);
-      setSearchQuery(''); // 清除搜索框
-      setViewMode('thumbnail'); // 退出详情模式
-    } catch (error) {
-      console.error('Error navigating to path:', error);
-    }
-  };
+  //   try {
+  //     const appPath = targetPath;
+  //     const systemPath = window.ipc.convertToSystemPath(appPath);
+  //     const mediaFiles = await window.ipc.scanDirectory(systemPath, filterOtherFiles);
+  //     setFiles(mediaFiles);
+  //     setCurrentPath(appPath);
+  //     setSelectedFileIndex(0);
+  //     setSearchQuery(''); // 清除搜索框
+  //     setViewMode('thumbnail'); // 退出详情模式
+  //   } catch (error) {
+  //     console.error('Error navigating to path:', error);
+  //   }
+  // };
 
   const handleOpenInExplorer = async () => {
     try {
@@ -161,9 +169,13 @@ export const useFileOperations = () => {
     }
   };
 
-  const getMediaFiles = () => {
+  const getMediaFiles = useCallback(() => {
+
     return files.filter(f => f.type === 'image' || f.type === 'video');
-  };
+  }, [files]);
+  const onRefresh = useCallback((path: string) => {
+    handleDirectoryClick(path || currentPath);
+  }, [currentPath,handleDirectoryClick]);
 
   const handleFilterChange = async (value: boolean) => {
     setFilterOtherFiles(value);
@@ -191,6 +203,60 @@ export const useFileOperations = () => {
   const toggleSortMode = () => {
     setSortByTime(!sortByTime);
   };
+
+  const handleNewFolder = useCallback((currentPath: string) => {
+    setOperation({
+      type: 'newFolder',
+      path: currentPath
+    });
+  }, []);
+
+  const handleRename = useCallback((file: MediaFile) => {
+    setOperation({
+      type: 'rename',
+      file
+    });
+  }, []);
+
+  const validateFileName = useCallback((name: string) => {
+    if (!name) {
+      return '文件名不能为空';
+    }
+    if (name.includes('/') || name.includes('\\')) {
+      return '文件名不能包含 / 或 \\';
+    }
+    if (name.match(/[<>:"|?*]/)) {
+      return '文件名不能包含 < > : " | ? * 等特殊字符';
+    }
+    return undefined;
+  }, []);
+
+  const handleConfirm = useCallback(async (value: string) => {
+    if (!operation) return;
+
+    try {
+      if (operation.type === 'newFolder') {
+        const newFolderPath = path.join(operation.path!, value);
+        await window.ipc.createDirectory(newFolderPath);
+      } else if (operation.type === 'rename' && operation.file) {
+        const oldPath = operation.file.path;
+        const newPath = path.join(path.dirname(oldPath), value);
+        await window.ipc.renameFile(oldPath, newPath);
+      }
+      const systemPath = window.ipc.convertToSystemPath(currentPath);
+      const mediaFiles = await window.ipc.scanDirectory(systemPath, filterOtherFiles);
+      setFiles(mediaFiles);
+    } catch (error) {
+      console.error('File operation failed:', error);
+      // TODO: 显示错误提示
+    }
+
+    setOperation(null);
+  }, [operation, currentPath, filterOtherFiles]);
+
+  const handleCancel = useCallback(() => {
+    setOperation(null);
+  }, []);
 
   // 监听外部打开路径的事件
   useEffect(() => {
@@ -227,16 +293,25 @@ export const useFileOperations = () => {
     searchQuery,
     filterOtherFiles,
     sortByTime,
+    setFiles,
     setSearchQuery,
+    setCurrentPath,
     handleOpenDirectory,
     handleDirectoryClick,
     handleBack,
     handleFileClick,
-    handlePathSegmentClick,
+    // handlePathSegmentClick,
     handleOpenInExplorer,
     handleViewModeChange,
     handleFilterChange,
     toggleSortMode,
+    onRefresh,
     getMediaFiles,
+    operation,
+    handleNewFolder,
+    handleRename,
+    handleConfirm,
+    handleCancel,
+    validateFileName
   };
 };

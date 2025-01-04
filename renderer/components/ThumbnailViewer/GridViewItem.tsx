@@ -9,10 +9,9 @@ interface GridItemProps {
   onDirectoryClick: (path: string) => void;
   onFileClick: (file: MediaFile) => void;
   getFileIcon: (file: MediaFile) => JSX.Element;
-  colors: any;
 }
 
-const GridItem: React.FC<GridItemProps> = React.memo(({ file, onDirectoryClick, onFileClick, getFileIcon, colors }) => (
+const GridItem: React.FC<GridItemProps> = React.memo(({ file, onDirectoryClick, onFileClick, getFileIcon }) => (
   <div
     className="media-item group relative rounded-lg overflow-hidden cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:shadow-lg"
     onClick={() => {

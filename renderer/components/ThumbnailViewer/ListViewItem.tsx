@@ -6,10 +6,9 @@ interface ListItemProps {
   onDirectoryClick: (path: string) => void;
   onFileClick: (file: MediaFile) => void;
   getFileIcon: (file: MediaFile) => JSX.Element;
-  colors: any;
 }
 
-const ListItem: React.FC<ListItemProps> = React.memo(({ file, onDirectoryClick, onFileClick, getFileIcon, colors }) => (
+const ListItem: React.FC<ListItemProps> = React.memo(({ file, onDirectoryClick, onFileClick, getFileIcon }) => (
   <div
     className="flex items-center px-4 py-2 cursor-pointer hover:bg-gray-100/5"
     onClick={() => {

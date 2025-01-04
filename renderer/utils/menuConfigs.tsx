@@ -13,13 +13,19 @@ import {
 import { MenuItem } from '../components/ContextMenu/types';
 import { MediaFile } from '../../main/fileUtils';
 
+interface MenuConfigProps {
+  onRename: (file: MediaFile) => void;
+  onNewFolder: (path: string) => void;
+  onRefresh: (path: string) => Promise<void | MediaFile[]>;
+}
+
 // 创建菜单图标的辅助函数
 const createMenuIcon = (Icon: any, className: string = 'w-5 h-5') => (
   <Icon className={className} />
 );
 
 // 基础菜单项 - 所有类型通用
-const getBaseMenuItems = (file: MediaFile): MenuItem[] => [
+const getBaseMenuItems = (file: MediaFile, { onRename }: MenuConfigProps): MenuItem[] => [
   {
     label: '在资源管理器中打开',
     icon: createMenuIcon(ArrowTopRightOnSquareIcon),
@@ -38,27 +44,21 @@ const getBaseMenuItems = (file: MediaFile): MenuItem[] => [
   {
     label: '重命名',
     icon: createMenuIcon(PencilIcon),
-    onClick: () => {
-      // TODO: 实现重命名功能
-    }
+    onClick: () => onRename(file)
   }
 ];
 
 // 目录特有的菜单项
-const getDirectoryMenuItems = (file: MediaFile): MenuItem[] => [
-  {
-    label: '刷新',
-    icon: createMenuIcon(ArrowPathIcon),
-    onClick: () => {
-      // TODO: 实现刷新功能
-    }
-  },
+const getDirectoryMenuItems = (file: MediaFile, { onNewFolder, onRefresh }: MenuConfigProps): MenuItem[] => [
+  // {
+  //   label: '刷新',
+  //   icon: createMenuIcon(ArrowPathIcon),
+  //   onClick: () => onRefresh(file.path)
+  // },
   {
     label: '新建文件夹',
     icon: createMenuIcon(FolderPlusIcon),
-    onClick: () => {
-      // TODO: 实现新建文件夹功能
-    }
+    onClick: () => onNewFolder(file.path)
   }
 ];
 
@@ -127,13 +127,35 @@ const getOtherFileMenuItems = (file: MediaFile): MenuItem[] => [
   }
 ];
 
+// 空白区域的菜单项
+export const getEmptyAreaMenuItems = (currentPath: string, { onNewFolder, onRefresh }: MenuConfigProps): MenuItem[] => [
+  // {
+  //   label: '刷新',
+  //   icon: createMenuIcon(ArrowPathIcon),
+  //   onClick: () => onRefresh(currentPath)
+  // },
+  {
+    label: '新建文件夹',
+    icon: createMenuIcon(FolderPlusIcon),
+    onClick: () => onNewFolder(currentPath)
+  },
+  {
+    label: '在资源管理器中打开',
+    icon: createMenuIcon(ArrowTopRightOnSquareIcon),
+    onClick: () => {
+      const filePath = window.ipc.convertToSystemPath(currentPath);
+      window.ipc.openInExplorer(filePath);
+    }
+  }
+];
+
 // 根据文件类型获取对应的菜单项
-export const getFileTypeMenuItems = (file: MediaFile): MenuItem[] => {
-  const baseItems = getBaseMenuItems(file);
+export const getFileTypeMenuItems = (file: MediaFile, menuConfig: MenuConfigProps): MenuItem[] => {
+  const baseItems = getBaseMenuItems(file, menuConfig);
   
   switch (file.type) {
     case 'directory':
-      return [...baseItems, ...getDirectoryMenuItems(file)];
+      return [...baseItems, ...getDirectoryMenuItems(file, menuConfig)];
     case 'image':
       return [...baseItems, ...getImageMenuItems(file)];
     case 'video':

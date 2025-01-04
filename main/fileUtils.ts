@@ -135,3 +135,23 @@ export function convertToSystemPath(appPath: string): string {
 export function formatPathToExplorerStyle(inputPath: string): string {
   return convertToAppPath(inputPath);
 }
+
+// 创建目录
+export const createDirectory = async (directoryPath: string): Promise<void> => {
+  try {
+    await fs.promises.mkdir(directoryPath);
+  } catch (error) {
+    console.error('Error creating directory:', error);
+    throw error;
+  }
+};
+
+// 重命名文件或目录
+export const renameFile = async (oldPath: string, newPath: string): Promise<void> => {
+  try {
+    await fs.promises.rename(oldPath, newPath);
+  } catch (error) {
+    console.error('Error renaming file:', error);
+    throw error;
+  }
+};

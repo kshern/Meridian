@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback, useState } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { List, AutoSizer } from 'react-virtualized';
 import { MediaFile } from '../../../main/fileUtils';
 import {
@@ -7,10 +7,6 @@ import {
   DocumentIcon,
   FilmIcon,
   DocumentTextIcon,
-  ArrowTopRightOnSquareIcon,
-  TrashIcon,
-  ClipboardIcon,
-  ArrowPathIcon,
 } from '@heroicons/react/24/outline';
 import useTheme from '../../hooks/useTheme';
 import ListItem from './ListViewItem';
@@ -18,30 +14,40 @@ import GridItem from './GridViewItem';
 import ContextMenu from '../ContextMenu';
 import { useContextMenu } from '../ContextMenu/hooks';
 import { useFileContextMenu } from '../../hooks/useFileContextMenu';
+import InputDialog from '../InputDialog';
 
 interface ThumbnailViewerProps {
   files: MediaFile[];
   onDirectoryClick: (path: string) => void;
   onFileClick: (file: MediaFile) => void;
   viewType: 'grid' | 'list';
+  currentPath: string;
 }
 
-const ThumbnailViewer: React.FC<ThumbnailViewerProps> = ({ files, onDirectoryClick, onFileClick, viewType }) => {
-  const { colors } = useTheme();
+const ThumbnailViewer: React.FC<ThumbnailViewerProps> = ({ files, onDirectoryClick, onFileClick, viewType, currentPath }) => {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
   const { contextMenu, showContextMenu, hideContextMenu } = useContextMenu();
-  const { getContextMenuItems } = useFileContextMenu();
+  const {
+    getContextMenuItems,
+    getEmptyContextMenuItems,
+    handleConfirm,
+    handleCancel,
+    validateFileName,
+    operation
+  } = useFileContextMenu();
 
   const getFileIcon = useCallback((file: MediaFile) => {
     const getIconColor = (type: string) => {
       switch (type) {
         case 'directory':
-          return colors.folderIcon;
+          return isDark ? 'text-gray-400' : 'text-gray-600';
         case 'image':
-          return colors.imageIcon;
+          return isDark ? 'text-gray-400' : 'text-gray-600';
         case 'video':
-          return colors.videoIcon;
+          return isDark ? 'text-gray-400' : 'text-gray-600';
         case 'text':
-          return colors.textIcon;
+          return isDark ? 'text-gray-400' : 'text-gray-600';
         case 'other':
         default:
           return 'text-gray-400';
@@ -63,7 +69,7 @@ const ThumbnailViewer: React.FC<ThumbnailViewerProps> = ({ files, onDirectoryCli
       default:
         return <DocumentIcon className={iconClass} />;
     }
-  }, [colors]);
+  }, [isDark]);
 
   const getColumnsCount = useCallback((width: number) => {
     if (viewType === 'list') return 1;
@@ -76,10 +82,20 @@ const ThumbnailViewer: React.FC<ThumbnailViewerProps> = ({ files, onDirectoryCli
     return columnWidth + 40;
   }, [viewType, getColumnsCount]);
 
-  // 处理右键菜单
+  // 处理文件/文件夹的右键菜单
   const handleContextMenu = useCallback((file: MediaFile, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     showContextMenu(e, getContextMenuItems(file));
   }, [showContextMenu, getContextMenuItems]);
+
+  // 处理空白区域的右键菜单
+  const handleEmptyAreaContextMenu = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    if (currentPath) {
+      showContextMenu(e, getEmptyContextMenuItems(currentPath));
+    }
+  }, [showContextMenu, getEmptyContextMenuItems, currentPath]);
 
   const rowRenderer = useCallback(({ index, key, style, width }: any) => {
     if (viewType === 'list') {
@@ -104,7 +120,6 @@ const ThumbnailViewer: React.FC<ThumbnailViewerProps> = ({ files, onDirectoryCli
             onDirectoryClick={onDirectoryClick}
             onFileClick={onFileClick}
             getFileIcon={getFileIcon}
-            colors={colors}
           />
         </div>
       );
@@ -128,24 +143,53 @@ const ThumbnailViewer: React.FC<ThumbnailViewerProps> = ({ files, onDirectoryCli
               onDirectoryClick={onDirectoryClick}
               onFileClick={onFileClick}
               getFileIcon={getFileIcon}
-              colors={colors}
             />
           </div>
         ))}
       </div>
     );
-  }, [files, viewType, getColumnsCount, onDirectoryClick, onFileClick, getFileIcon, colors, handleContextMenu]);
+  }, [files, viewType, getColumnsCount, onDirectoryClick, onFileClick, getFileIcon, isDark, handleContextMenu]);
 
   if (files.length === 0) {
     return (
-      <div className={`h-full flex items-center justify-center ${colors.background}`}>
-        <p className={colors.text}>此文件夹为空</p>
+      <div 
+        className={`h-full flex items-center justify-center ${
+          isDark ? 'text-gray-400' : 'text-gray-500'
+        }`}
+        onContextMenu={handleEmptyAreaContextMenu}
+      >
+        <div className="text-center">
+          <FolderIcon className="w-16 h-16 mx-auto mb-4 opacity-50" />
+          <p className="text-lg">此文件夹为空</p>
+        </div>
+        {contextMenu && (
+          <ContextMenu
+            x={contextMenu.x}
+            y={contextMenu.y}
+            items={contextMenu.items}
+            onClose={hideContextMenu}
+          />
+        )}
+        {operation && (
+          <InputDialog
+            isOpen={true}
+            title={operation.type === 'newFolder' ? '新建文件夹' : '重命名'}
+            defaultValue={operation.type === 'rename' && operation.file ? operation.file.name : ''}
+            placeholder={operation.type === 'newFolder' ? '请输入文件夹名称' : '请输入新的名称'}
+            onConfirm={handleConfirm}
+            onCancel={handleCancel}
+            validation={validateFileName}
+          />
+        )}
       </div>
     );
   }
 
   return (
-    <div className={`h-full ${colors.background}`}>
+    <div 
+      className={`h-full ${isDark ? 'bg-gray-900' : 'bg-gray-100'}`}
+      onContextMenu={handleEmptyAreaContextMenu}
+    >
       <AutoSizer>
         {({ width, height }) => {
           const columnsCount = getColumnsCount(width);
@@ -171,6 +215,17 @@ const ThumbnailViewer: React.FC<ThumbnailViewerProps> = ({ files, onDirectoryCli
                   y={contextMenu.y}
                   items={contextMenu.items}
                   onClose={hideContextMenu}
+                />
+              )}
+              {operation && (
+                <InputDialog
+                  isOpen={true}
+                  title={operation.type === 'newFolder' ? '新建文件夹' : '重命名'}
+                  defaultValue={operation.type === 'rename' && operation.file ? operation.file.name : ''}
+                  placeholder={operation.type === 'newFolder' ? '请输入文件夹名称' : '请输入新的名称'}
+                  onConfirm={handleConfirm}
+                  onCancel={handleCancel}
+                  validation={validateFileName}
                 />
               )}
             </>

@@ -75,7 +75,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({
     }));
   };
 
-  const isSelected = currentPath === item.path;
+  const isSelected = currentPath === item.path || (!item.isExpanded && currentPath?.startsWith(item.path + path.sep));
   const paddingLeft = level * 16 + 8 + 'px';
 
   const formatFileSize = (bytes: number): string => {
@@ -91,7 +91,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({
   return (
     <>
       <div
-        className={`flex items-center py-1.5 px-2 cursor-pointer rounded-md mx-1 my-0.5 group transition-colors duration-150
+        className={`flex items-center py-1.5 px-2 cursor-pointer rounded-md mx-1 my-0.5 group transition-colors duration-150 select-text
           ${isSelected 
             ? isDark 
               ? 'bg-gray-700 text-gray-100' 
@@ -101,7 +101,12 @@ const TreeNode: React.FC<TreeNodeProps> = ({
               : 'text-gray-700 hover:bg-gray-100'
           }`}
         style={{ paddingLeft }}
-        onClick={() => onSelect(item.path)}
+        onClick={() => {
+          onSelect(item.path)
+          if (item.type === 'directory') {
+            onToggle(item.path);
+          }
+        }}
         onContextMenu={handleContextMenu}
         title={item.type === 'directory' 
           ? item.name
