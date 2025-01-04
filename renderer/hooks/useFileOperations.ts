@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { MediaFile } from '../../main/fileUtils';
+import { naturalCompare } from '../utils/sorting';
 
 export const useFileOperations = () => {
   const [files, setFiles] = useState<MediaFile[]>([]);
@@ -181,8 +182,8 @@ export const useFileOperations = () => {
         // 按修改时间倒序
         return b.modifiedTime.getTime() - a.modifiedTime.getTime();
       } else {
-        // 按文件名正序
-        return a.name.localeCompare(b.name);
+        // 按文件名正序（使用自然排序）
+        return naturalCompare(a.name, b.name);
       }
     });
   };

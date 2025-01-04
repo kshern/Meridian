@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FolderIcon, ChevronRightIcon, ChevronDownIcon, PhotoIcon, FilmIcon, DocumentTextIcon, DocumentIcon } from '@heroicons/react/24/outline';
 import path from 'path';
 import useTheme from '../../hooks/useTheme';
+import { naturalCompare } from '../../utils/sorting';
 
 interface FolderTreeProps {
   onSelect: (path: string) => void;
@@ -225,8 +226,8 @@ const FolderTree: React.FC<FolderTreeProps> = ({ onSelect, showMediaOnly, curren
         const timeB = b.modifiedTime?.getTime() || 0;
         return timeB - timeA;
       } else {
-        // 按文件名正序
-        return a.name.localeCompare(b.name);
+        // 按文件名正序（使用自然排序）
+        return naturalCompare(a.name, b.name);
       }
     });
   };
