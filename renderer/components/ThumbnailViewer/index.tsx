@@ -1,10 +1,23 @@
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback, useState } from 'react';
 import { List, AutoSizer } from 'react-virtualized';
 import { MediaFile } from '../../../main/fileUtils';
-import { FolderIcon, PhotoIcon, DocumentIcon, FilmIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
+import {
+  FolderIcon,
+  PhotoIcon,
+  DocumentIcon,
+  FilmIcon,
+  DocumentTextIcon,
+  ArrowTopRightOnSquareIcon,
+  TrashIcon,
+  ClipboardIcon,
+  ArrowPathIcon,
+} from '@heroicons/react/24/outline';
 import useTheme from '../../hooks/useTheme';
 import ListItem from './ListViewItem';
 import GridItem from './GridViewItem';
+import ContextMenu from '../ContextMenu';
+import { useContextMenu } from '../ContextMenu/hooks';
+import { useFileContextMenu } from '../../hooks/useFileContextMenu';
 
 interface ThumbnailViewerProps {
   files: MediaFile[];
@@ -15,6 +28,8 @@ interface ThumbnailViewerProps {
 
 const ThumbnailViewer: React.FC<ThumbnailViewerProps> = ({ files, onDirectoryClick, onFileClick, viewType }) => {
   const { colors } = useTheme();
+  const { contextMenu, showContextMenu, hideContextMenu } = useContextMenu();
+  const { getContextMenuItems } = useFileContextMenu();
 
   const getFileIcon = useCallback((file: MediaFile) => {
     const getIconColor = (type: string) => {
@@ -61,6 +76,11 @@ const ThumbnailViewer: React.FC<ThumbnailViewerProps> = ({ files, onDirectoryCli
     return columnWidth + 40;
   }, [viewType, getColumnsCount]);
 
+  // 处理右键菜单
+  const handleContextMenu = useCallback((file: MediaFile, e: React.MouseEvent) => {
+    showContextMenu(e, getContextMenuItems(file));
+  }, [showContextMenu, getContextMenuItems]);
+
   const rowRenderer = useCallback(({ index, key, style, width }: any) => {
     if (viewType === 'list') {
       const file = files[index];
@@ -77,6 +97,7 @@ const ThumbnailViewer: React.FC<ThumbnailViewerProps> = ({ files, onDirectoryCli
             backgroundColor
           }} 
           className="flex items-center"
+          onContextMenu={(e) => handleContextMenu(file, e)}
         >
           <ListItem
             file={file}
@@ -97,7 +118,11 @@ const ThumbnailViewer: React.FC<ThumbnailViewerProps> = ({ files, onDirectoryCli
     return (
       <div key={key} style={{ ...style, display: 'flex', gap: '10px', padding: '20px' }}>
         {rowFiles.map((file) => (
-          <div key={file.path} style={{ width: columnWidth, minWidth: columnWidth, maxWidth: columnWidth }}>
+          <div
+            key={file.path}
+            style={{ width: columnWidth, minWidth: columnWidth, maxWidth: columnWidth }}
+            onContextMenu={(e) => handleContextMenu(file, e)}
+          >
             <GridItem
               file={file}
               onDirectoryClick={onDirectoryClick}
@@ -109,12 +134,12 @@ const ThumbnailViewer: React.FC<ThumbnailViewerProps> = ({ files, onDirectoryCli
         ))}
       </div>
     );
-  }, [files, viewType, getColumnsCount, getFileIcon, colors, onDirectoryClick, onFileClick]);
+  }, [files, viewType, getColumnsCount, onDirectoryClick, onFileClick, getFileIcon, colors, handleContextMenu]);
 
   if (files.length === 0) {
     return (
-      <div className="flex items-center justify-center h-full w-full text-gray-400">
-        <p>暂无文件</p>
+      <div className={`h-full flex items-center justify-center ${colors.background}`}>
+        <p className={colors.text}>此文件夹为空</p>
       </div>
     );
   }
@@ -128,17 +153,27 @@ const ThumbnailViewer: React.FC<ThumbnailViewerProps> = ({ files, onDirectoryCli
           const rowCount = viewType === 'list' ? files.length : Math.ceil(files.length / columnsCount);
 
           return (
-            <List
-              width={width}
-              height={height}
-              rowCount={rowCount}
-              rowHeight={rowHeight}
-              rowRenderer={(props) => rowRenderer({ ...props, width })}
-              overscanRowCount={5}
-              scrollToAlignment="auto"
-              style={{ outline: 'none' }}
-              containerStyle={{ outline: 'none' }}
-            />
+            <>
+              <List
+                width={width}
+                height={height}
+                rowCount={rowCount}
+                rowHeight={rowHeight}
+                rowRenderer={(props) => rowRenderer({ ...props, width })}
+                overscanRowCount={5}
+                scrollToAlignment="auto"
+                style={{ outline: 'none' }}
+                containerStyle={{ outline: 'none' }}
+              />
+              {contextMenu && (
+                <ContextMenu
+                  x={contextMenu.x}
+                  y={contextMenu.y}
+                  items={contextMenu.items}
+                  onClose={hideContextMenu}
+                />
+              )}
+            </>
           );
         }}
       </AutoSizer>

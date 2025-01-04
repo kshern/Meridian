@@ -3,6 +3,9 @@ import { FolderIcon, ChevronRightIcon, ChevronDownIcon, PhotoIcon, FilmIcon, Doc
 import path from 'path';
 import useTheme from '../../hooks/useTheme';
 import { naturalCompare } from '../../utils/sorting';
+import ContextMenu from '../ContextMenu';
+import { useContextMenu } from '../ContextMenu/hooks';
+import { useFileContextMenu } from '../../hooks/useFileContextMenu';
 
 interface FolderTreeProps {
   onSelect: (path: string) => void;
@@ -19,6 +22,15 @@ interface TreeItem {
   children?: TreeItem[];
   size?: number;
   modifiedTime?: Date;
+}
+
+interface TreeNodeProps {
+  item: TreeItem;
+  level?: number;
+  onSelect: (path: string) => void;
+  onToggle: (path: string) => void;
+  showMediaOnly?: boolean;
+  currentPath?: string;
 }
 
 const FileIcon = ({ type }: { type: string }) => {
@@ -39,91 +51,90 @@ const FileIcon = ({ type }: { type: string }) => {
   }
 };
 
-const TreeNode = ({ item, level = 0, onSelect, onToggle, showMediaOnly, currentPath }: { 
-  item: TreeItem; 
-  level?: number; 
-  onSelect: (path: string) => void; 
-  onToggle: (path: string) => void;
-  showMediaOnly?: boolean;
-  currentPath?: string;
+const TreeNode: React.FC<TreeNodeProps> = ({ 
+  item, 
+  level = 0, 
+  onSelect, 
+  onToggle, 
+  showMediaOnly,
+  currentPath
 }) => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
-  const indent = level * 20;
-  const isCurrentPath = currentPath === item.path;
-  const isCollapsedParentOfCurrentPath = currentPath && !item.isExpanded && (
-    currentPath.startsWith(item.path) && 
-    currentPath.charAt(item.path.length) === '>' &&
-    item.path !== currentPath
-  );
+  const { contextMenu, showContextMenu, hideContextMenu } = useContextMenu();
+  const { getContextMenuItems } = useFileContextMenu();
 
-  // 如果启用了仅显示媒体文件，且当前项既不是目录也不是媒体文件，则不显示
-  if (showMediaOnly && item.type !== 'directory' && item.type !== 'image' && item.type !== 'video') {
-    return null;
-  }
-
-  const handleClick = async (e: React.MouseEvent) => {
+  const handleContextMenu = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (item.type === 'directory') {
-      if (!item.isExpanded) {  
-        onToggle(item.path);
-      }
-      onSelect(window.ipc.convertToSystemPath(item.path));
-    } else if (item.type === 'image' || item.type === 'video') {
-      try {
-        const file = {
-          name: item.name,
-          path: window.ipc.convertToSystemPath(item.path),
-          type: item.type,
-          size: item.size || 0,
-          modifiedTime: item.modifiedTime || new Date()
-        };
-        await window.ipc.handleFileClick(file);
-      } catch (error) {
-        console.error('Error handling file click:', error);
-      }
-    }
+    showContextMenu(e, getContextMenuItems({
+      name: item.name,
+      path: item.path,
+      type: item.type,
+      size: item.size,
+      modifiedTime: item.modifiedTime || new Date()
+    }));
   };
 
-  const handleToggleClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onToggle(item.path);
+  const isSelected = currentPath === item.path;
+  const paddingLeft = level * 16 + 8 + 'px';
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
   };
+
+  if (!item) return null;
 
   return (
-    <div>
-      <div 
-        className={`flex items-center py-1.5 px-3 
-          ${isDark ? 'hover:bg-gray-700/50' : 'hover:bg-gray-50'}
-          cursor-pointer transition-colors duration-200
-          rounded-lg mx-1 my-0.5
-          ${item.type === 'directory' ? 'font-medium' : 'font-normal'}
-          ${isDark ? 'text-gray-200' : 'text-gray-700'}
-          ${(isCurrentPath || isCollapsedParentOfCurrentPath) ? (isDark ? 'bg-gray-700' : 'bg-gray-100') : ''}
-        `}
-        style={{ paddingLeft: `${indent + 12}px` }}
-        onClick={handleClick}
+    <>
+      <div
+        className={`flex items-center py-1.5 px-2 cursor-pointer rounded-md mx-1 my-0.5 group transition-colors duration-150
+          ${isSelected 
+            ? isDark 
+              ? 'bg-gray-700 text-gray-100' 
+              : 'bg-gray-200 text-gray-900'
+            : isDark
+              ? 'text-gray-300 hover:bg-gray-700/50'
+              : 'text-gray-700 hover:bg-gray-100'
+          }`}
+        style={{ paddingLeft }}
+        onClick={() => onSelect(item.path)}
+        onContextMenu={handleContextMenu}
         title={item.type === 'directory' 
           ? item.name
           : `${item.name}${item.size ? '\n' + formatFileSize(item.size) : ''}`}
       >
-        <div className="flex items-center flex-1 min-w-0 space-x-2">
+        <div className="flex items-center min-w-0 flex-1">
           {item.type === 'directory' && (
-            <div 
-              className={`p-0.5 -ml-1 ${isDark ? 'hover:bg-gray-600' : 'hover:bg-gray-200'} rounded-sm cursor-pointer`}
-              onClick={handleToggleClick}
+            <button
+              className={`p-0.5 rounded-sm mr-1 transition-colors
+                ${isDark 
+                  ? 'hover:bg-gray-600 text-gray-400' 
+                  : 'hover:bg-gray-200 text-gray-500'
+                }`}
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggle(item.path);
+              }}
             >
               {item.isExpanded ? (
-                <ChevronDownIcon className={`w-3.5 h-3.5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
+                <ChevronDownIcon className="w-3.5 h-3.5" />
               ) : (
-                <ChevronRightIcon className={`w-3.5 h-3.5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
+                <ChevronRightIcon className="w-3.5 h-3.5" />
               )}
-            </div>
+            </button>
           )}
           <FileIcon type={item.type} />
-          <span className={`truncate text-sm ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>{item.name}</span>
+          <span className="ml-1.5 truncate text-sm">
+            {item.name}
+          </span>
           {item.size && item.type !== 'directory' && (
-            <span className={`ml-auto text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'} tabular-nums`}>
+            <span className={`ml-auto text-xs tabular-nums pl-3
+              ${isDark ? 'text-gray-500' : 'text-gray-400'}
+            `}>
               {formatFileSize(item.size)}
             </span>
           )}
@@ -131,9 +142,9 @@ const TreeNode = ({ item, level = 0, onSelect, onToggle, showMediaOnly, currentP
       </div>
       {item.isExpanded && item.children && (
         <div>
-          {item.children.map((child, index) => (
+          {item.children.map((child) => (
             <TreeNode
-              key={child.path + index}
+              key={child.path}
               item={child}
               level={level + 1}
               onSelect={onSelect}
@@ -144,17 +155,16 @@ const TreeNode = ({ item, level = 0, onSelect, onToggle, showMediaOnly, currentP
           ))}
         </div>
       )}
-    </div>
+      {contextMenu && (
+        <ContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          items={contextMenu.items}
+          onClose={hideContextMenu}
+        />
+      )}
+    </>
   );
-};
-
-// 文件大小格式化函数
-const formatFileSize = (bytes: number): string => {
-  if (bytes === 0) return '0 B';
-  const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
 };
 
 const FolderTree: React.FC<FolderTreeProps> = ({ onSelect, showMediaOnly, currentPath, sortByTime }) => {
